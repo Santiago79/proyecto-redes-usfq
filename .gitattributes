@@ -1,0 +1,13 @@
+# Comportamiento por defecto: Git detecta automáticamente los archivos de texto
+* text=auto
+
+# Forzar que los scripts de Bash SIEMPRE usen saltos de línea de Linux (LF)
+*.sh text eol=lf
+
+# Forzar que los archivos de configuración y Docker SIEMPRE usen LF
+*.Dockerfile text eol=lf
+*.conf text eol=lf
+*.yml text eol=lf
+
+# Prevenir que Excel en Windows rompa los saltos de línea de los CSV
+*.csv text eol=lf
