@@ -39,3 +39,45 @@ services:
       - NET_ADMIN
       - NET_RAW
     restart: unless-stopped
+
+
+  web:
+    image: nginx:alpine
+    container_name: servidor_web
+    networks:
+      red_publica:
+        ipv4_address: 172.20.10.10
+    sysctls:
+      - net.ipv4.tcp_syncookies=0
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro  
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    entrypoint: >
+      sh -c "
+        sleep 3 &&
+        ip route add 172.20.20.0/24 via 172.20.10.254 2>/dev/null &&
+        ip route add 172.20.30.0/24 via 172.20.10.254 2>/dev/null &&
+        ip route &&
+        nginx -g 'daemon off;'
+      "
+    restart: unless-stopped
+  
+  monitor:
+    image: nicolaka/netshoot:latest
+    container_name: monitor
+    networks:
+      red_publica:
+        ipv4_address: 172.20.10.50
+      red_privada:
+        ipv4_address: 172.20.20.50
+      red_ataque:
+        ipv4_address: 172.20.30.50
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    command: ["sleep", "infinity"]
+    restart: unless-stopped

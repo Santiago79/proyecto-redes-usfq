@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>EmpresaX | Infraestructura Redes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .card {
+            max-width: 720px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            transition: all 0.2s ease;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #0f172a;
+            padding: 0.25rem 1rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #a5f3fc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+            margin-bottom: 0.5rem;
+        }
+
+        .sub {
+            color: #94a3b8;
+            border-left: 3px solid #22c55e;
+            padding-left: 1rem;
+            margin: 1rem 0 1.5rem 0;
+            font-weight: 400;
+        }
+
+        .info-panel {
+            background: #0f172a;
+            border-radius: 1.5rem;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border: 1px solid #334155;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #1e293b;
+            font-size: 0.9rem;
+        }
+
+        .row:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .value {
+            color: #f1f5f9;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+        }
+
+        .vulnerable-tag {
+            background: #7f1a1a;
+            color: #fecaca;
+            padding: 0.2rem 0.7rem;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .status-online {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #064e3b;
+            color: #34d399;
+            padding: 0.25rem 1rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-online::before {
+            content: "●";
+            font-size: 0.9rem;
+            color: #22c55e;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #475569;
+            margin-top: 2rem;
+            border-top: 1px solid #1e293b;
+            padding-top: 1.5rem;
+        }
+
+        .highlight {
+            color: #facc15;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="badge">
+            🧪 PROYECTO REDES · SIMULACIÓN DDoS
+        </div>
+
+        <h1>🏢 EmpresaX</h1>
+        <div class="sub">
+            Infraestructura empresarial · Zona DMZ
+        </div>
+
+        <!-- estado general -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin: 1rem 0 0 0;">
+            <div class="status-online">
+                Servidor activo
+            </div>
+            <div style="font-size: 0.75rem; background: #00000030; padding: 0.2rem 0.8rem; border-radius: 40px;">
+                🛡️ Modo: <strong class="highlight">VULNERABLE (SYN Flood)</strong>
+            </div>
+        </div>
+
+        <!-- panel técnico -->
+        <div class="info-panel">
+            <div class="row">
+                <span class="label">🌐 IPv4 (red pública)</span>
+                <span class="value">172.20.10.10</span>
+            </div>
+            <div class="row">
+                <span class="label">🖥️ Servidor web</span>
+                <span class="value">NGINX / Alpine <span class="vulnerable-tag">tcp_syncookies=0</span></span>
+            </div>
+            <div class="row">
+                <span class="label">⚠️ SYN Cookies</span>
+                <span class="value">DESACTIVADAS <span style="color:#f87171;">(ataque SYN Flood efectivo)</span></span>
+            </div>
+            <div class="row">
+                <span class="label">📡 Puerto expuesto</span>
+                <span class="value">8080 (host) → 80 (contenedor)</span>
+            </div>
+            <div class="row">
+                <span class="label">🧭 Gateway / Router</span>
+                <span class="value">172.20.10.254</span>
+            </div>
+        </div>
+
+        <!-- segmentación lógica -->
+        <div class="info-panel" style="background: #0c0a2a;">
+            <div class="row">
+                <span class="label">🔹 Subred pública (DMZ)</span>
+                <span class="value">172.20.10.0/24</span>
+            </div>
+            <div class="row">
+                <span class="label">🔸 Subred privada (DB)</span>
+                <span class="value">172.20.20.0/24</span>
+            </div>
+            <div class="row">
+                <span class="label">💀 Subred ataque</span>
+                <span class="value">172.20.30.0/24</span>
+            </div>
+            <div class="row">
+                <span class="label">📡 Monitor multi-interfaz</span>
+                <span class="value">172.20.10.50 / .20.50 / .30.50</span>
+            </div>
+        </div>
+
+
+        <div class="footer-note">
+            🧪 Entorno académico · simulación controlada de ataques DDoS (capa 4)<br>
+            router con IP forwarding · segmentación de red · monitorización con tcpdump + Wireshark
+        </div>
+    </div>
+</body>
+</html>
