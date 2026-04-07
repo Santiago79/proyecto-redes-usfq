@@ -1,0 +1,41 @@
+version: '3.8'
+
+networks:
+  red_publica:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.10.0/24
+          gateway: 172.20.10.1      
+
+  red_privada:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.20.0/24
+          gateway: 172.20.20.1
+
+  red_ataque:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.30.0/24
+          gateway: 172.20.30.1
+
+services:
+  router:
+    build:
+      context: .
+      dockerfile: router.Dockerfile
+    container_name: router
+    networks:
+      red_publica:
+        ipv4_address: 172.20.10.254   
+      red_privada:
+        ipv4_address: 172.20.20.254   
+      red_ataque:
+        ipv4_address: 172.20.30.254   
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    restart: unless-stopped
