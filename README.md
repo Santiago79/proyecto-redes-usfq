@@ -25,7 +25,7 @@ graph TD
             end
 
             subgraph "Router Virtual - Conecta todas las subredes"
-                ROUTER["🚦 Router<br/>eth0: 172.20.10.1 (Pública)<br/> eth1: 172.20.20.1 (Privada)<br/>eth2: 172.20.30.1 (Ataque)"]
+                ROUTER["🚦 Router<br/>eth0: 172.20.10.254 (Pública)<br/> eth1: 172.20.20.254 (Privada)<br/>eth2: 172.20.30.254 (Ataque)"]
             end
 
             subgraph "Monitor - Conectado a TODAS las subredes"
