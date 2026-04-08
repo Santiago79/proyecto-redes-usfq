@@ -58,7 +58,7 @@ services:
       red_publica:
         ipv4_address: 172.20.10.10
     sysctls:
-      - net.ipv4.tcp_syncookies=0 # <-- Vulnerabilidad lista para tu SYN Flood
+      - net.ipv4.tcp_syncookies=0 
     ports:
       - "8080:80"
     volumes:
@@ -72,50 +72,6 @@ services:
         ip route add 172.20.20.0/24 via 172.20.10.254 2>/dev/null &&
         ip route add 172.20.30.0/24 via 172.20.10.254 2>/dev/null &&
         nginx -g 'daemon off;'
-      "
-    restart: unless-stopped
-    
-  db:
-    build:
-      context: .
-      dockerfile: db.Dockerfile
-    container_name: base_datos
-    depends_on:
-      - router
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: empresa
-    networks:
-      red_privada:
-        ipv4_address: 172.20.20.10
-    cap_add:
-      - NET_ADMIN
-    entrypoint: >
-      sh -c "
-        sleep 3 &&
-        ip route add 172.20.10.0/24 via 172.20.20.254 2>/dev/null || true &&
-        ip route add 172.20.30.0/24 via 172.20.20.254 2>/dev/null || true &&
-        exec docker-entrypoint.sh mysqld --bind-address=172.20.20.10 --port=3306
-      "
-    restart: unless-stopped
-
-  atacante:
-    image: dyrnq/nettools:latest
-    container_name: atacante
-    depends_on:
-      - router
-    networks:
-      red_ataque:
-        ipv4_address: 172.20.30.10
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    entrypoint: >
-      sh -c "
-        sleep 3 &&
-        ip route add 172.20.10.0/24 via 172.20.30.254 2>/dev/null || true &&
-        ip route add 172.20.20.0/24 via 172.20.30.254 2>/dev/null || true &&
-        tail -f /dev/null
       "
     restart: unless-stopped
   
