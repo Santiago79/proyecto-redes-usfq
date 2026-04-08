@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Limpiar reglas iptables que puedan bloquear por si acaso
+# Limpiar reglas iptables que puedan bloquear
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
 iptables -P OUTPUT ACCEPT
