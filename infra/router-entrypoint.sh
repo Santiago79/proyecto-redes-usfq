@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# Habilitar IP forwarding
-sysctl -w net.ipv4.ip_forward=1
-
 # Limpiar reglas iptables que puedan bloquear
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
@@ -12,7 +9,6 @@ iptables -F
 
 # Mostrar configuración actual
 echo "=== Router iniciado ==="
-echo "IP forwarding: $(cat /proc/sys/net/ipv4/ip_forward)"
 echo "Interfaces de red:"
 ip addr show | grep -E "^[0-9]+:|inet "
 
