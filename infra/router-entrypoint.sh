@@ -9,6 +9,7 @@ iptables -F
 
 # Mostrar configuración actual
 echo "=== Router iniciado ==="
+echo "IP forwarding: $(cat /proc/sys/net/ipv4/ip_forward)"
 echo "Interfaces de red:"
 ip addr show | grep -E "^[0-9]+:|inet "
 

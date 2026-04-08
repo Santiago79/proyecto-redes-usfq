@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Control de Ataques | EmpresaX</title>
+    <style>
+        body { font-family: sans-serif; background: #0f172a; color: white; text-align: center; padding: 50px; }
+        .btn { 
+            padding: 15px 25px; margin: 10px; border: none; border-radius: 8px; 
+            cursor: pointer; font-weight: bold; font-size: 1rem; transition: 0.3s;
+        }
+        .udp { background: #3b82f6; } /* Azul */
+        .syn { background: #ef4444; } /* Rojo */
+        .http { background: #f59e0b; } /* Naranja */
+        .stop { background: #6b7280; width: 100%; margin-top: 20px; } /* Gris */
+        .btn:hover { opacity: 0.8; transform: scale(1.05); }
+    </style>
+</head>
+<body>
+    <h1>🚀 Panel de Control DDoS</h1>
+    <p>Selecciona el vector de ataque para EmpresaX (172.20.10.10)</p>
+    
+    <button class="btn udp" onclick="fetch('/atacar/udp')">Lanzar UDP Flood</button>
+    <button class="btn syn" onclick="fetch('/atacar/syn')">Lanzar SYN Flood</button>
+    <button class="btn http" onclick="fetch('/atacar/http')">Lanzar HTTP Flood</button>
+    
+    <br>
+    <button class="btn stop" onclick="fetch('/atacar/stop')">🛑 DETENER TODOS LOS ATAQUES</button>
+
+    <p id="status" style="margin-top: 20px; color: #94a3b8;"></p>
+
+    <script>
+        function lanzar(tipo) {
+            document.getElementById('status').innerText = "Enviando comando: " + tipo + "...";
+            fetch('/atacar/' + tipo).then(() => {
+                document.getElementById('status').innerText = "Ataque " + tipo + " en curso.";
+            });
+        }
+    </script>
+</body>
+</html>
