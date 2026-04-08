@@ -1,21 +1,19 @@
 version: '3.8'
 
 networks:
-  red_publica:
+  1_red_publica:
     driver: bridge
     ipam:
       config:
         - subnet: 172.20.10.0/24
-          gateway: 172.20.10.1      
-
-  red_privada:
+          gateway: 172.20.10.1
+  2_red_privada:
     driver: bridge
     ipam:
       config:
         - subnet: 172.20.20.0/24
           gateway: 172.20.20.1
-
-  red_ataque:
+  3_red_ataque:
     driver: bridge
     ipam:
       config:
@@ -29,33 +27,33 @@ services:
       dockerfile: router.Dockerfile
     container_name: router
     networks:
-      red_publica:
-        ipv4_address: 172.20.10.254   
-      red_privada:
-        ipv4_address: 172.20.20.254   
-      red_ataque:
-        ipv4_address: 172.20.30.254   
+      1_red_publica:
+        ipv4_address: 172.20.10.254
+      2_red_privada:
+        ipv4_address: 172.20.20.254
+      3_red_ataque:
+        ipv4_address: 172.20.30.254
     cap_add:
       - NET_ADMIN
       - NET_RAW
     restart: unless-stopped
 
-
   web:
     image: nginx:alpine
     container_name: servidor_web
+    depends_on:
+      - router
     networks:
-      red_publica:
+      1_red_publica:
         ipv4_address: 172.20.10.10
     sysctls:
       - net.ipv4.tcp_syncookies=0
     ports:
       - "8080:80"
     volumes:
-      - ./html:/usr/share/nginx/html:ro  
+      - ./html:/usr/share/nginx/html:ro
     cap_add:
       - NET_ADMIN
-      - NET_RAW
     entrypoint: >
       sh -c "
         sleep 3 &&
@@ -65,16 +63,50 @@ services:
         nginx -g 'daemon off;'
       "
     restart: unless-stopped
-  
+
+  db:
+    image: mysql:8.0
+    container_name: base_datos
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: empresa
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppass
+    networks:
+      2_red_privada:
+        ipv4_address: 172.20.20.10
+    command: >
+      --bind-address=172.20.20.10
+      --port=3306
+    restart: unless-stopped
+
+  atacante:
+    image: dyrnq/nettools:latest
+    container_name: atacante
+    networks:
+      3_red_ataque:
+        ipv4_address: 172.20.30.10
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    entrypoint: >
+      sh -c "
+        ip route add 172.20.10.0/24 via 172.20.30.254 2>/dev/null || true &&
+        ip route add 172.20.20.0/24 via 172.20.30.254 2>/dev/null || true &&
+        echo 'Atacante listo' &&
+        tail -f /dev/null
+      "
+    restart: unless-stopped
+
   monitor:
     image: nicolaka/netshoot:latest
     container_name: monitor
     networks:
-      red_publica:
+      1_red_publica:
         ipv4_address: 172.20.10.50
-      red_privada:
+      2_red_privada:
         ipv4_address: 172.20.20.50
-      red_ataque:
+      3_red_ataque:
         ipv4_address: 172.20.30.50
     cap_add:
       - NET_ADMIN
