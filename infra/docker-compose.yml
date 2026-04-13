@@ -1,21 +1,19 @@
 version: '3.8'
 
 networks:
-  red_publica:
+  1_red_publica:
     driver: bridge
     ipam:
       config:
         - subnet: 172.20.10.0/24
-          gateway: 172.20.10.1      
-
-  red_privada:
+          gateway: 172.20.10.1
+  2_red_privada:
     driver: bridge
     ipam:
       config:
         - subnet: 172.20.20.0/24
           gateway: 172.20.20.1
-
-  red_ataque:
+  3_red_ataque:
     driver: bridge
     ipam:
       config:
@@ -29,17 +27,17 @@ services:
       dockerfile: router.Dockerfile
     container_name: router
     networks:
-      red_publica:
-        ipv4_address: 172.20.10.254   
-      red_privada:
-        ipv4_address: 172.20.20.254   
-      red_ataque:
-        ipv4_address: 172.20.30.254   
+      1_red_publica:
+        ipv4_address: 172.20.10.254
+      2_red_privada:
+        ipv4_address: 172.20.20.254
+      3_red_ataque:
+        ipv4_address: 172.20.30.254
     cap_add:
       - NET_ADMIN
       - NET_RAW
     sysctls:
-      - net.ipv4.ip_forward=1 
+      - net.ipv4.ip_forward=1
     restart: unless-stopped
 
   web:
@@ -47,34 +45,33 @@ services:
     container_name: servidor_web
     depends_on:
       - router
-    # --- AQUÍ ESTÁ EL CAMBIO CRÍTICO ---
-#    deploy:
-#      resources:
-#        limits:
-#          cpus: '0.05'    # Solo el 5% de un núcleo (Asfixia total)
-#          memory: 20M     # Casi nada de RAM para que crashee rápido
-    # -----------------------------------
     networks:
-      red_publica:
+      1_red_publica:
         ipv4_address: 172.20.10.10
     sysctls:
-      - net.ipv4.tcp_syncookies=0 
+      - net.ipv4.tcp_syncookies=0
     ports:
       - "8080:80"
     volumes:
-      - ./html:/usr/share/nginx/html:ro  
+      - ./html:/usr/share/nginx/html:ro
     cap_add:
       - NET_ADMIN
       - NET_RAW
     entrypoint: >
       sh -c "
+        apk add --no-cache iperf3 &&
         sleep 3 &&
         ip route add 172.20.20.0/24 via 172.20.10.254 2>/dev/null &&
         ip route add 172.20.30.0/24 via 172.20.10.254 2>/dev/null &&
         nginx -g 'daemon off;'
       "
     restart: unless-stopped
-  
+    deploy:
+      resources:
+        limits:
+          cpus: '0.05'
+          memory: 50M
+
   db:
     build:
       context: .
@@ -85,8 +82,10 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: empresa
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppass
     networks:
-      red_privada:
+      2_red_privada:
         ipv4_address: 172.20.20.10
     cap_add:
       - NET_ADMIN
@@ -105,36 +104,54 @@ services:
     depends_on:
       - router
     networks:
-      red_ataque:
+      3_red_ataque:
         ipv4_address: 172.20.30.10
     cap_add:
       - NET_ADMIN
       - NET_RAW
     entrypoint: >
       sh -c "
+        apk add --no-cache iperf3 &&
         sleep 3 &&
         ip route add 172.20.10.0/24 via 172.20.30.254 2>/dev/null || true &&
         ip route add 172.20.20.0/24 via 172.20.30.254 2>/dev/null || true &&
         tail -f /dev/null
       "
     restart: unless-stopped
-  
+
   monitor:
-    image: nicolaka/netshoot:latest
+    build:
+      context: .
+      dockerfile: monitor.Dockerfile
     container_name: monitor
     networks:
-      red_publica:
+      1_red_publica:
         ipv4_address: 172.20.10.50
-      red_privada:
+      2_red_privada:
         ipv4_address: 172.20.20.50
-      red_ataque:
+      3_red_ataque:
         ipv4_address: 172.20.30.50
     cap_add:
       - NET_ADMIN
       - NET_RAW
     command: ["sleep", "infinity"]
     restart: unless-stopped
-    
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: base_datos
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 300M
+    ports:
+      - "8081:80"
+    networks:
+      - 2_red_privada
+    restart: unless-stopped
   panel_control:
     build: 
       context: ../panel  # <-- Esto le dice a Docker: "Sube un nivel y entra a panel"
@@ -145,7 +162,7 @@ services:
     ports:
       - "5000:5000"
     networks:
-      red_ataque:
+      3_red_ataque:
         ipv4_address: 172.20.30.5
     depends_on:
       - atacante
