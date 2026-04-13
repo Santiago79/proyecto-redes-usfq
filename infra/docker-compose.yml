@@ -150,7 +150,7 @@ services:
     ports:
       - "8081:80"
     networks:
-      - 2_red_privada
+      2_red_privada: {} # Las llaves vacías le dicen que use la config por defecto de esa red
     restart: unless-stopped
   panel_control:
     build: 
