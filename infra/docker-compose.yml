@@ -41,29 +41,29 @@ services:
     restart: unless-stopped
 
   web:
-    image: nginx:alpine
+    image: php:8.2-apache
     container_name: servidor_web
     depends_on:
       - router
+      - db
     networks:
       1_red_publica:
         ipv4_address: 172.20.10.10
-    sysctls:
-      - net.ipv4.tcp_syncookies=0
     ports:
       - "8080:80"
     volumes:
-      - ./html:/usr/share/nginx/html:ro
+      - ./html:/var/www/html:ro
     cap_add:
       - NET_ADMIN
       - NET_RAW
     entrypoint: >
       sh -c "
-        apk add --no-cache iperf3 &&
-        sleep 3 &&
-        ip route add 172.20.20.0/24 via 172.20.10.254 2>/dev/null &&
-        ip route add 172.20.30.0/24 via 172.20.10.254 2>/dev/null &&
-        nginx -g 'daemon off;'
+        apt-get update && apt-get install -y iproute2 &&
+        docker-php-ext-install mysqli &&
+        sleep 5 &&
+        ip route add 172.20.20.0/24 via 172.20.10.254 2>/dev/null || true &&
+        ip route add 172.20.30.0/24 via 172.20.10.254 2>/dev/null || true &&
+        apache2-foreground
       "
     restart: unless-stopped
     deploy:
@@ -84,6 +84,8 @@ services:
       MYSQL_DATABASE: empresa
       MYSQL_USER: appuser
       MYSQL_PASSWORD: apppass
+    volumes:
+      - ./db_init:/docker-entrypoint-initdb.d
     networks:
       2_red_privada:
         ipv4_address: 172.20.20.10
@@ -150,11 +152,12 @@ services:
     ports:
       - "8081:80"
     networks:
-      2_red_privada: {} # Las llaves vacías le dicen que use la config por defecto de esa red
+      2_red_privada: {}
     restart: unless-stopped
+
   panel_control:
     build: 
-      context: ../panel  # <-- Esto le dice a Docker: "Sube un nivel y entra a panel"
+      context: ../panel
       dockerfile: Dockerfile
     container_name: panel_control
     volumes:

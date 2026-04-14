@@ -12,29 +12,53 @@
         .udp { background: #3b82f6; } /* Azul */
         .syn { background: #ef4444; } /* Rojo */
         .http { background: #f59e0b; } /* Naranja */
+        .sqli { background: #8b5cf6; } /* Morado para el SQLi */
         .stop { background: #6b7280; width: 100%; margin-top: 20px; } /* Gris */
         .btn:hover { opacity: 0.8; transform: scale(1.05); }
+        
+        /* Efecto de parpadeo para el estado */
+        .activo { color: #10b981 !important; font-weight: bold; animation: blink 1s linear infinite; }
+        @keyframes blink { 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
-    <h1>🚀 Panel de Control DDoS</h1>
+    <h1>🚀 Panel de Control DDoS y Explotación</h1>
     <p>Selecciona el vector de ataque para EmpresaX (172.20.10.10)</p>
     
-    <button class="btn udp" onclick="fetch('/atacar/udp')">Lanzar UDP Flood</button>
-    <button class="btn syn" onclick="fetch('/atacar/syn')">Lanzar SYN Flood</button>
-    <button class="btn http" onclick="fetch('/atacar/http')">Lanzar HTTP Flood</button>
+    <button class="btn udp" onclick="lanzar('udp', 'UDP Flood')">Lanzar UDP Flood</button>
+    <button class="btn syn" onclick="lanzar('syn', 'SYN Flood')">Lanzar SYN Flood</button>
+    <button class="btn http" onclick="lanzar('http', 'HTTP Get Flood')">Lanzar HTTP Flood</button>
+    <button class="btn sqli" onclick="lanzar('sqli_dos', 'SQLi Time-Based DoS')">Lanzar SQLi DoS</button>
     
     <br>
-    <button class="btn stop" onclick="fetch('/atacar/stop')">🛑 DETENER TODOS LOS ATAQUES</button>
+    <button class="btn stop" onclick="lanzar('stop', 'Detener')">🛑 DETENER TODOS LOS ATAQUES</button>
 
-    <p id="status" style="margin-top: 20px; color: #94a3b8;"></p>
+    <p id="status" style="margin-top: 20px; color: #94a3b8; font-size: 1.2rem;">Sistema en espera...</p>
 
     <script>
-        function lanzar(tipo) {
-            document.getElementById('status').innerText = "Enviando comando: " + tipo + "...";
-            fetch('/atacar/' + tipo).then(() => {
-                document.getElementById('status').innerText = "Ataque " + tipo + " en curso.";
-            });
+        function lanzar(ruta, nombreReal) {
+            const statusEl = document.getElementById('status');
+            
+            if (ruta === 'stop') {
+                statusEl.innerText = "🛑 Deteniendo todos los procesos...";
+                statusEl.className = "";
+                statusEl.style.color = "#ef4444";
+            } else {
+                statusEl.innerText = "🔥 Lanzando ataque: " + nombreReal + " en curso...";
+                statusEl.className = "activo";
+            }
+
+            // Hacemos la petición al backend de Flask (app.py)
+            fetch('/atacar/' + ruta)
+                .then(response => {
+                    if (ruta === 'stop') {
+                        setTimeout(() => {
+                            statusEl.innerText = "✅ Sistema limpio. En espera...";
+                            statusEl.style.color = "#94a3b8";
+                        }, 1000);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
         }
     </script>
 </body>
