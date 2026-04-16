@@ -1,25 +1,3 @@
-version: '3.8'
-
-networks:
-  1_red_publica:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.10.0/24
-          gateway: 172.20.10.1
-  2_red_privada:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.20.0/24
-          gateway: 172.20.20.1
-  3_red_ataque:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.30.0/24
-          gateway: 172.20.30.1
-
 services:
   router:
     build:
@@ -27,64 +5,30 @@ services:
       dockerfile: router.Dockerfile
     container_name: router
     networks:
-      1_red_publica:
+      red_publica:
         ipv4_address: 172.20.10.254
-      2_red_privada:
+      red_privada:
         ipv4_address: 172.20.20.254
-      3_red_ataque:
+      red_ataque:
         ipv4_address: 172.20.30.254
     cap_add:
       - NET_ADMIN
-      - NET_RAW
+    entrypoint: >
+      sh -c "
+        echo 'Configurando forwarding...' &&
+        iptables -P FORWARD ACCEPT &&
+        iptables -F FORWARD &&
+
+        echo 'Router listo' &&
+        tail -f /dev/null
+      "
     sysctls:
       - net.ipv4.ip_forward=1
     restart: unless-stopped
 
-  web:
-    image: php:8.2-apache
-    container_name: servidor_web
-    depends_on:
-      - router
-      - db
-    networks:
-      1_red_publica:
-        ipv4_address: 172.20.10.10
-    ports:
-      - "8080:80"
-    volumes:
-      - ./html:/var/www/html:ro
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    entrypoint: >
-      sh -c "
-        apt-get update && apt-get install -y iproute2 &&
-        docker-php-ext-install mysqli &&
-
-        sysctl -w net.ipv4.tcp_syncookies=0 &&
-        sysctl -w net.ipv4.tcp_max_syn_backlog=64 &&
-        sysctl -w net.core.somaxconn=64 &&
-        sysctl -w net.netfilter.nf_conntrack_max=512 &&
-
-        sleep 5 &&
-        ip route add 172.20.20.0/24 via 172.20.10.254 2>/dev/null || true &&
-        ip route add 172.20.30.0/24 via 172.20.10.254 2>/dev/null || true &&
-        apache2-foreground
-      "
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '0.1'
-          memory: 100M
-
   db:
-    build:
-      context: .
-      dockerfile: db.Dockerfile
+    image: mysql:8.0
     container_name: base_datos
-    depends_on:
-      - router
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
       MYSQL_DATABASE: empresa
@@ -93,36 +37,85 @@ services:
     volumes:
       - ./db_init:/docker-entrypoint-initdb.d
     networks:
-      2_red_privada:
+      red_privada:
         ipv4_address: 172.20.20.10
     cap_add:
       - NET_ADMIN
     entrypoint: >
-      sh -c "
-        sleep 3 &&
-        ip route add 172.20.10.0/24 via 172.20.20.254 2>/dev/null || true &&
-        ip route add 172.20.30.0/24 via 172.20.20.254 2>/dev/null || true &&
-        exec docker-entrypoint.sh mysqld --bind-address=172.20.20.10 --port=3306
+      bash -c "
+        apt-get update -qq &&
+        apt-get install -y -qq iproute2 &&
+
+        echo 'Configurando rutas DB...' &&
+        ip route add 172.20.10.0/24 via 172.20.20.254 || true &&
+        ip route add 172.20.30.0/24 via 172.20.20.254 || true &&
+
+        exec docker-entrypoint.sh mysqld
       "
+    command: >
+      --bind-address=0.0.0.0
+      --skip-log-bin
+      --innodb-buffer-pool-size=64M
+      --innodb-log-file-size=16M
+      --max_connections=50
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
+
+  web:
+    image: php:8.2-apache
+    container_name: servidor_web
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      red_publica:
+        ipv4_address: 172.20.10.10
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/var/www/html:ro
+    cap_add:
+      - NET_ADMIN
+    entrypoint: >
+      sh -c "
+        apt-get update -qq &&
+        apt-get install -y -qq iproute2 net-tools default-mysql-client &&
+
+        echo 'Configurando rutas WEB...' &&
+        ip route add 172.20.20.0/24 via 172.20.10.254 || true &&
+        ip route add 172.20.30.0/24 via 172.20.10.254 || true &&
+
+        echo 'Esperando DB...' &&
+        sleep 5 &&
+
+        exec apache2-foreground
+      "
 
   atacante:
     image: dyrnq/nettools:latest
     container_name: atacante
     networks:
-      3_red_ataque:
+      red_ataque:
         ipv4_address: 172.20.30.10
     cap_add:
       - NET_ADMIN
-      - NET_RAW
-    cpus: 1.0
-    mem_limit: 512m
     entrypoint: >
       sh -c "
-        apk add --no-cache iperf3 &&
+        apt-get update -qq &&
+        apt-get install -y -qq iproute2 iputils-ping iperf3 &&
+
         sleep 3 &&
-        ip route add 172.20.10.0/24 via 172.20.30.254 2>/dev/null || true &&
-        ip route add 172.20.20.0/24 via 172.20.30.254 2>/dev/null || true &&
+
+        ip route add 172.20.10.0/24 via 172.20.30.254 || true &&
+        ip route add 172.20.20.0/24 via 172.20.30.254 || true &&
+
+        echo 'Rutas configuradas en atacante:' &&
+        ip route &&
+
         tail -f /dev/null
       "
 
@@ -132,36 +125,32 @@ services:
       dockerfile: monitor.Dockerfile
     container_name: monitor
     networks:
-      1_red_publica:
+      red_publica:
         ipv4_address: 172.20.10.50
-      2_red_privada:
+      red_privada:
         ipv4_address: 172.20.20.50
-      3_red_ataque:
+      red_ataque:
         ipv4_address: 172.20.30.50
     cap_add:
       - NET_ADMIN
-      - NET_RAW
     command: ["sleep", "infinity"]
     restart: unless-stopped
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
+    image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
     depends_on:
       - db
     environment:
-      PMA_HOST: base_datos
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
-      UPLOAD_LIMIT: 300M
+      PMA_HOST: 172.20.20.10
     ports:
       - "8081:80"
     networks:
-      2_red_privada: {}
+      red_privada:
     restart: unless-stopped
 
   panel_control:
-    build: 
+    build:
       context: ../panel
       dockerfile: Dockerfile
     container_name: panel_control
@@ -170,7 +159,26 @@ services:
     ports:
       - "5000:5000"
     networks:
-      3_red_ataque:
+      red_ataque:
         ipv4_address: 172.20.30.5
     depends_on:
       - atacante
+
+networks:
+  red_publica:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.10.0/24
+
+  red_privada:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.20.0/24
+
+  red_ataque:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.30.0/24
