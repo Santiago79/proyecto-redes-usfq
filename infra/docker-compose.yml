@@ -68,32 +68,48 @@ services:
   web:
     image: php:8.2-apache
     container_name: servidor_web
+
     depends_on:
       db:
         condition: service_healthy
+
     networks:
       red_publica:
         ipv4_address: 172.20.10.10
+
     ports:
       - "8080:80"
+
     volumes:
       - ./html:/var/www/html:ro
+
     cap_add:
       - NET_ADMIN
+
+    # 🔥 LIMITES DE RECURSOS
+    cpus: 0.5
+    mem_limit: 256m
+
     entrypoint: >
       sh -c "
         apt-get update -qq &&
         apt-get install -y -qq iproute2 net-tools default-mysql-client &&
 
-        echo 'Configurando rutas WEB...' &&
+        echo 'Limitando ancho de banda...' &&
+        tc qdisc add dev eth0 root tbf rate 1mbit burst 32kbit latency 400ms &&
+
+        echo 'Configurando rutas...' &&
         ip route add 172.20.20.0/24 via 172.20.10.254 || true &&
         ip route add 172.20.30.0/24 via 172.20.10.254 || true &&
 
         echo 'Esperando DB...' &&
         sleep 5 &&
 
+        echo 'Iniciando Apache...' &&
         exec apache2-foreground
       "
+
+    restart: unless-stopped
 
   atacante:
     image: dyrnq/nettools:latest
