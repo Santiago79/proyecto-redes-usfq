@@ -1,0 +1,146 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": false,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "content": "# Relacion entre ataques, capas y evidencia\n\n| Ataque | Objetivo | Protocolo | Capa OSI | Capa TCP/IP | Sintoma observable | Evidencia en Grafana |\n| --- | --- | --- | --- | --- | --- | --- |\n| UDP Flood | Web o DB | UDP | Transporte (L4) | Transporte | Pico fuerte de trafico y paquetes sin sesion | `Red y Ataques -> Trafico Principal Durante Ataques` y `Paquetes por Segundo` |\n| SYN Flood | Web | TCP SYN | Transporte (L4) | Transporte | Aumento de paquetes SYN, latencia y saturacion de workers | `Servidor Web -> Latencia del Sitio EmpresaX`, `Workers y Scoreboard Apache` |\n| ACK Flood | Web | TCP ACK | Transporte (L4) | Transporte | Presion sobre pila TCP, mas trafico que sesiones utiles | `Red y Ataques -> Trafico Principal Durante Ataques` |\n| Conntrack Killer | Router/Web | TCP SYN con persistencia | Transporte/Red (L4/L3) | Transporte/Internet | Mayor carga sobre el camino de red y estado observable | `Red y Ataques -> Correlacion Temporal de Impacto` y `Infraestructura General -> Throughput de Red por Servicio` |\n| HTTP Flood | Web | HTTP | Aplicacion (L7) | Aplicacion | Caida de throughput util, mas latencia, workers ocupados | `Servidor Web -> Throughput HTTP`, `Workers y Scoreboard Apache` |\n| SQLi DoS | Login PHP y MySQL | HTTP + SQL | Aplicacion (L7) | Aplicacion | Crecen conexiones y consultas sobre la DB durante el abuso del login | `Base de Datos -> Conexiones MySQL`, `Ritmo de Consultas` |\n\n## Como presentar el antes / durante / despues\n\n1. Genera trafico legitimo con los scripts del proyecto.\n2. Observa la linea base en `Infraestructura General`, `Servidor Web` y `Base de Datos`.\n3. Lanza un ataque desde el panel o los scripts reproducibles.\n4. Explica el cambio de latencia, throughput, conexiones y trafico de red usando la hora del evento.\n5. Deten el ataque y muestra la recuperacion del servicio.\n",
+        "mode": "markdown"
+      },
+      "title": "Mapa Academico de Ataques",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 2,
+      "options": {
+        "displayMode": "gradient",
+        "orientation": "horizontal",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showUnfilled": true
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "attack_active",
+          "legendFormat": "{{attack}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Ataques Activos",
+      "type": "bargauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "increase(attack_launch_total[1h])",
+          "legendFormat": "{{attack}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Frecuencia de Uso del Laboratorio",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "academico",
+    "osi",
+    "tcpip"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Academico Explicativo",
+  "uid": "academico-explicativo",
+  "version": 1,
+  "weekStart": ""
+}
