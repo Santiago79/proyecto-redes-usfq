@@ -1,4 +1,9 @@
-Red Empresarial con Docker, Ataques DDoS y Observabilidad
+# Simulación de Red Empresarial con Docker
+
+## Integrantes
+- Santiago Reátegui
+- María Emilia Cueva  
+- Jorge Gómez
 
 La infraestructura principal se mantiene con los mismos roles logicos del laboratorio:
 
