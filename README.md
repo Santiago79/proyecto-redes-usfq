@@ -127,7 +127,6 @@ Credenciales iniciales de Grafana:
 - [docs/linux.md](docs/linux.md)
 - [docs/windows.md](docs/windows.md)
 - [docs/pruebas.md](docs/pruebas.md)
-- [CHANGELOG_CODEX.md](CHANGELOG_CODEX.md)
 
 ## Nota sobre interfaces preservadas
 
