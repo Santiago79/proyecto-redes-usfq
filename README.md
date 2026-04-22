@@ -1,136 +1,111 @@
-# Simulación de Red Empresarial con Docker
+# Simulación de Red Empresarial con Docker — Proyecto Final
 
 ## Integrantes
 - Santiago Reátegui
-- María Emilia Cueva  
+- María Emilia Cueva
 - Jorge Gómez
 
-La infraestructura principal se mantiene con los mismos roles logicos del laboratorio:
+## Descripción general del proyecto final
+
+Este proyecto final implementa una simulación de red empresarial segmentada mediante Docker, diseñada para analizar el impacto de distintos ataques de denegación de servicio y degradación de servicios sobre una infraestructura distribuida.
+
+La infraestructura principal **se conserva con la misma lógica académica original del laboratorio**, manteniendo los mismos roles de red y la misma segmentación base:
 
 - `servidor_web` en `172.20.10.10` dentro de la DMZ.
 - `base_datos` en `172.20.20.10` dentro de la red privada.
 - `atacante` en `172.20.30.10` dentro de la red de ataque.
 - `router` como gateway virtual `.254` en las tres subredes originales.
-- `monitor` conectado a las tres redes para observacion y captura.
+- `monitor` conectado a todas las redes principales para observación y captura.
 - `panel_control` como interfaz de lanzamiento de ataques.
-- `EmpresaX` como interfaz visual del servicio expuesto.
+- `EmpresaX` como interfaz visual principal del entorno empresarial.
 
-## Topologia conservada
+Como parte del proyecto final, se añadió una **capa de observabilidad** orientada al monitoreo y análisis forense, compuesta por herramientas como Grafana, Prometheus, Loki y exporters especializados.  
+Esta adición **no reemplaza ni rompe la topología original**, sino que la complementa para permitir la recolección y visualización de métricas de red, recursos y disponibilidad.
 
-Las redes academicas originales se preservan:
+## Topología de red conservada
+
+Las redes académicas originales se preservan:
 
 - `red_publica`: `172.20.10.0/24`
 - `red_privada`: `172.20.20.0/24`
 - `red_ataque`: `172.20.30.0/24`
 
-La unica adicion estructural es `red_monitoreo` (`172.20.40.0/24`), usada exclusivamente para la capa de observabilidad. No reemplaza la topologia original ni altera el flujo de trafico del laboratorio.
+La única adición estructural es:
+
+- `red_monitoreo`: `172.20.40.0/24`
+
+Esta red adicional se usa **exclusivamente para la capa de observabilidad** y no altera el flujo principal del laboratorio, ni el enrutamiento base entre la DMZ, la red privada y la red de ataque.
 
 ```mermaid
 graph TD
-    ATT["Atacante<br/>172.20.30.10"]
-    WEB["Servidor web<br/>172.20.10.10"]
-    DB["MySQL<br/>172.20.20.10"]
-    MON["Monitor<br/>10.50 / 20.50 / 30.50"]
-    RTR["Router virtual<br/>10.254 / 20.254 / 30.254"]
-    PANEL["Panel de control<br/>172.20.30.5"]
-    OBS["Grafana + Prometheus + Loki<br/>172.20.40.0/24"]
+    subgraph "Host Físico"
+        subgraph "RED DOCKER: 172.20.0.0/16 (Proyecto Final)"
 
-    ATT --> RTR
-    WEB --> RTR
-    DB --> RTR
-    MON --> RTR
-    PANEL --> ATT
-    OBS -. observabilidad .-> WEB
-    OBS -. observabilidad .-> DB
-    OBS -. observabilidad .-> PANEL
-```
+            subgraph "Subred Pública (DMZ) - 172.20.10.0/24"
+                WEB["🖥️ Servidor Web / EmpresaX<br/>172.20.10.10"]
+            end
 
-## Ataques preservados
+            subgraph "Subred Privada (Backend) - 172.20.20.0/24"
+                DB["🗄️ Base de Datos MySQL<br/>172.20.20.10"]
+            end
 
-El laboratorio mantiene disponibles los seis ataques solicitados:
+            subgraph "Subred de Ataque - 172.20.30.0/24"
+                ATTACKER["💀 Atacante<br/>172.20.30.10"]
+                PANEL["🎛️ Panel de Control DDoS<br/>172.20.30.5"]
+            end
 
-- `UDP Flood`
-- `SYN Flood`
-- `ACK Flood`
-- `Conntrack Killer`
-- `HTTP Flood`
-- `SQLi DoS`
+            subgraph "Router Virtual - Conecta las subredes originales"
+                ROUTER["🚦 Router<br/>eth0: 172.20.10.254<br/>eth1: 172.20.20.254<br/>eth2: 172.20.30.254"]
+            end
 
-Todos se siguen lanzando desde el `panel_control` o desde scripts reproducibles en `scripts/linux` y `scripts/windows`.
+            subgraph "Monitor Académico - Conectado a las redes principales"
+                MONITOR["📡 Monitor<br/>172.20.10.50<br/>172.20.20.50<br/>172.20.30.50"]
+            end
 
-## Stack de monitoreo
+            subgraph "Red de Observabilidad - 172.20.40.0/24"
+                GRAFANA["📊 Grafana"]
+                PROM["📈 Prometheus"]
+                LOKI["📝 Loki"]
+                CADV["📦 cAdvisor"]
+                BBX["🌐 Blackbox Exporter"]
+                MYSQLX["🗄️ mysqld_exporter"]
+                APX["🌍 apache_exporter"]
+                PROMTAIL["📚 Promtail"]
+                DMX["⚙️ docker_metrics_exporter"]
+            end
 
-La observabilidad se implemento con:
+        end
+    end
 
-- `Grafana`
-- `Prometheus`
-- `cAdvisor`
-- `Blackbox Exporter`
-- `mysqld_exporter`
-- `apache_exporter`
-- `Loki`
-- `Promtail`
-- `docker_metrics_exporter` propio para metricas de contenedores y red con mejor fidelidad en Docker Desktop/WSL
+    %% Conexiones principales a router
+    WEB --- ROUTER
+    DB --- ROUTER
+    ATTACKER --- ROUTER
+    MONITOR --- ROUTER
 
-Dashboards provisionados automaticamente en Grafana:
+    %% Panel de control hacia atacante
+    PANEL -.->|"Lanza ataques"| ATTACKER
 
-- `Infraestructura General`
-- `Servidor Web`
-- `Base de Datos`
-- `Red y Ataques`
-- `Academico Explicativo`
-- `Logs del Laboratorio`
+    %% Tráfico malicioso
+    ATTACKER -.->|"SYN Flood / ACK Flood / HTTP Flood"| WEB
+    ATTACKER -.->|"UDP Flood"| WEB
+    ATTACKER -.->|"UDP Flood"| DB
+    ATTACKER -.->|"Conntrack Killer"| ROUTER
+    ATTACKER -.->|"SQLi DoS"| WEB
 
-## Inicio rapido
+    %% Tráfico legítimo
+    MONITOR -.->|"Peticiones HTTP legítimas"| WEB
+    WEB -.->|"Consultas SQL normales"| DB
 
-### Windows
-
-```powershell
-scripts\windows\up.ps1
-scripts\windows\validate.ps1
-```
-
-### Linux
-
-```bash
-bash scripts/linux/up.sh
-bash scripts/linux/validate.sh
-```
-
-## URLs utiles
-
-- EmpresaX: [http://localhost:8080](http://localhost:8080)
-- Panel DDoS: [http://localhost:5000](http://localhost:5000)
-- Grafana: [http://localhost:3000](http://localhost:3000)
-- Prometheus: [http://localhost:9090](http://localhost:9090)
-- phpMyAdmin: [http://localhost:8081](http://localhost:8081)
-- Loki ready: [http://localhost:3100/ready](http://localhost:3100/ready)
-
-Credenciales iniciales de Grafana:
-
-- Usuario: `admin`
-- Clave: `admin`
-
-## Scripts principales
-
-- Levantar entorno: `scripts/windows/up.ps1` o `scripts/linux/up.sh`
-- Validar entorno: `scripts/windows/validate.ps1` o `scripts/linux/validate.sh`
-- Generar trafico legitimo: `scripts/windows/generate_legitimate_traffic.ps1` o `scripts/linux/generate_legitimate_traffic.sh`
-- Lanzar ataques: `scripts/windows/attack.ps1 -Attack <ataque>` o `scripts/linux/attack.sh <ataque>`
-- Detener ataques: `scripts/windows/stop_attacks.ps1` o `scripts/linux/stop_attacks.sh`
-- Reiniciar laboratorio: `scripts/windows/reset_lab.ps1` o `scripts/linux/reset_lab.sh`
-- Consultar logs: `scripts/windows/logs.ps1` o `scripts/linux/logs.sh`
-- Consultar metricas: `scripts/windows/metrics.ps1` o `scripts/linux/metrics.sh`
-
-## Documentacion
-
-- [README2_MONITOREO_CAMBIOS.md](README2_MONITOREO_CAMBIOS.md)
-- [docs/arquitectura.md](docs/arquitectura.md)
-- [docs/monitoreo.md](docs/monitoreo.md)
-- [docs/linux.md](docs/linux.md)
-- [docs/windows.md](docs/windows.md)
-- [docs/pruebas.md](docs/pruebas.md)
-
-## Nota sobre interfaces preservadas
-
-Las vistas `EmpresaX` y `Panel de Control DDoS y Explotacion` se conservaron sin redisenos. La capa de monitoreo se incorporo como complemento externo en Grafana, no como sustitucion de las interfaces originales del laboratorio.
+    %% Observabilidad
+    GRAFANA -.->|"Dashboards"| PROM
+    GRAFANA -.->|"Logs"| LOKI
+    PROM -.->|"Scraping métricas"| WEB
+    PROM -.->|"Scraping métricas"| DB
+    PROM -.->|"Scraping métricas"| PANEL
+    PROM -.->|"Scraping métricas"| CADV
+    PROM -.->|"Scraping métricas"| BBX
+    PROM -.->|"Scraping métricas"| MYSQLX
+    PROM -.->|"Scraping métricas"| APX
+    PROM -.->|"Scraping métricas"| DMX
+    PROMTAIL -.->|"Recolección de logs"| LOKI
