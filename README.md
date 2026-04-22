@@ -1,6 +1,4 @@
-# Laboratorio de Red Empresarial con Docker, Ataques DDoS y Observabilidad
-
-Este repositorio implementa un laboratorio academico de simulacion de red empresarial con Docker. El objetivo es demostrar, observar y medir el impacto de ataques de denegacion de servicio sobre servicios criticos, conservando la topologia original del proyecto: DMZ, red privada, red de ataque, router virtual y monitor multi-interfaz.
+Red Empresarial con Docker, Ataques DDoS y Observabilidad
 
 La infraestructura principal se mantiene con los mismos roles logicos del laboratorio:
 
