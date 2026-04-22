@@ -7,34 +7,33 @@
 
 ## Descripción general del proyecto final
 
-Este proyecto final implementa una simulación de red empresarial segmentada mediante Docker, diseñada para analizar el impacto de distintos ataques de denegación de servicio y degradación de servicios sobre una infraestructura distribuida.
+Este proyecto final implementa una infraestructura de red empresarial segmentada mediante Docker, diseñada para simular tráfico legítimo, ejecutar ataques controlados y analizar su impacto sobre los servicios críticos de la organización.
 
-La infraestructura principal **se conserva con la misma lógica académica original del laboratorio**, manteniendo los mismos roles de red y la misma segmentación base:
+La arquitectura principal del proyecto **mantiene la misma topología lógica planteada originalmente**, conservando los mismos roles de red:
 
 - `servidor_web` en `172.20.10.10` dentro de la DMZ.
 - `base_datos` en `172.20.20.10` dentro de la red privada.
 - `atacante` en `172.20.30.10` dentro de la red de ataque.
 - `router` como gateway virtual `.254` en las tres subredes originales.
-- `monitor` conectado a todas las redes principales para observación y captura.
-- `panel_control` como interfaz de lanzamiento de ataques.
-- `EmpresaX` como interfaz visual principal del entorno empresarial.
+- `monitor` como módulo de monitorización conectado a la infraestructura para observación, recolección y visualización de métricas.
+- `panel_control` como interfaz de ejecución de ataques.
+- `EmpresaX` como interfaz visual principal del servicio empresarial expuesto.
 
-Como parte del proyecto final, se añadió una **capa de observabilidad** orientada al monitoreo y análisis forense, compuesta por herramientas como Grafana, Prometheus, Loki y exporters especializados.  
-Esta adición **no reemplaza ni rompe la topología original**, sino que la complementa para permitir la recolección y visualización de métricas de red, recursos y disponibilidad.
+A diferencia de una propuesta inicial o de un laboratorio parcial, este repositorio corresponde al **proyecto final**, por lo que incluye no solo la topología de red y los ataques, sino también una capa completa de observabilidad para analizar en tiempo real el comportamiento de la infraestructura.
 
-## Topología de red conservada
+## Topología del proyecto final
 
-Las redes académicas originales se preservan:
+Las redes principales del proyecto se conservan:
 
 - `red_publica`: `172.20.10.0/24`
 - `red_privada`: `172.20.20.0/24`
 - `red_ataque`: `172.20.30.0/24`
 
-La única adición estructural es:
+Adicionalmente, se incorpora una red complementaria de observabilidad:
 
 - `red_monitoreo`: `172.20.40.0/24`
 
-Esta red adicional se usa **exclusivamente para la capa de observabilidad** y no altera el flujo principal del laboratorio, ni el enrutamiento base entre la DMZ, la red privada y la red de ataque.
+Esta red adicional **no reemplaza ni rompe la topología original**, sino que permite integrar el sistema de monitorización del proyecto final sin alterar el flujo académico principal entre la DMZ, la red privada y la red de ataque.
 
 ```mermaid
 graph TD
@@ -50,22 +49,22 @@ graph TD
             end
 
             subgraph "Subred de Ataque - 172.20.30.0/24"
-                ATTACKER["💀 Atacante<br/>172.20.30.10"]
-                PANEL["🎛️ Panel de Control DDoS<br/>172.20.30.5"]
+                ATT["💀 Atacante<br/>172.20.30.10"]
+                PANEL["🎛️ Panel de Control DDoS y Explotación<br/>172.20.30.5"]
             end
 
-            subgraph "Router Virtual - Conecta las subredes originales"
-                ROUTER["🚦 Router<br/>eth0: 172.20.10.254<br/>eth1: 172.20.20.254<br/>eth2: 172.20.30.254"]
+            subgraph "Router Virtual - Conecta las subredes principales"
+                RTR["🚦 Router<br/>172.20.10.254<br/>172.20.20.254<br/>172.20.30.254"]
             end
 
-            subgraph "Monitor Académico - Conectado a las redes principales"
-                MONITOR["📡 Monitor<br/>172.20.10.50<br/>172.20.20.50<br/>172.20.30.50"]
+            subgraph "Módulo de Monitorización"
+                MON["📡 Monitor<br/>Nodo lógico de observación del proyecto"]
             end
 
-            subgraph "Red de Observabilidad - 172.20.40.0/24"
-                GRAFANA["📊 Grafana"]
-                PROM["📈 Prometheus"]
-                LOKI["📝 Loki"]
+            subgraph "Red de Monitoreo - 172.20.40.0/24"
+                PROM["📈 Prometheus<br/>Recolección de métricas"]
+                GRAF["📊 Grafana<br/>Visualización de métricas"]
+                LOKI["📝 Loki<br/>Agregación de logs"]
                 CADV["📦 cAdvisor"]
                 BBX["🌐 Blackbox Exporter"]
                 MYSQLX["🗄️ mysqld_exporter"]
@@ -77,35 +76,30 @@ graph TD
         end
     end
 
-    %% Conexiones principales a router
-    WEB --- ROUTER
-    DB --- ROUTER
-    ATTACKER --- ROUTER
-    MONITOR --- ROUTER
+    WEB --- RTR
+    DB --- RTR
+    ATT --- RTR
+    MON --- RTR
 
-    %% Panel de control hacia atacante
-    PANEL -.->|"Lanza ataques"| ATTACKER
+    PANEL -.->|"Lanza ataques"| ATT
 
-    %% Tráfico malicioso
-    ATTACKER -.->|"SYN Flood / ACK Flood / HTTP Flood"| WEB
-    ATTACKER -.->|"UDP Flood"| WEB
-    ATTACKER -.->|"UDP Flood"| DB
-    ATTACKER -.->|"Conntrack Killer"| ROUTER
-    ATTACKER -.->|"SQLi DoS"| WEB
+    ATT -.->|"SYN Flood / ACK Flood / HTTP Flood"| WEB
+    ATT -.->|"UDP Flood"| WEB
+    ATT -.->|"UDP Flood"| DB
+    ATT -.->|"Conntrack Killer"| RTR
+    ATT -.->|"SQLi DoS"| WEB
 
-    %% Tráfico legítimo
-    MONITOR -.->|"Peticiones HTTP legítimas"| WEB
+    MON -.->|"Tráfico legítimo y validación"| WEB
     WEB -.->|"Consultas SQL normales"| DB
 
-    %% Observabilidad
-    GRAFANA -.->|"Dashboards"| PROM
-    GRAFANA -.->|"Logs"| LOKI
-    PROM -.->|"Scraping métricas"| WEB
-    PROM -.->|"Scraping métricas"| DB
-    PROM -.->|"Scraping métricas"| PANEL
-    PROM -.->|"Scraping métricas"| CADV
-    PROM -.->|"Scraping métricas"| BBX
-    PROM -.->|"Scraping métricas"| MYSQLX
-    PROM -.->|"Scraping métricas"| APX
-    PROM -.->|"Scraping métricas"| DMX
-    PROMTAIL -.->|"Recolección de logs"| LOKI
+    PROM -.->|"Recolecta métricas"| WEB
+    PROM -.->|"Recolecta métricas"| DB
+    PROM -.->|"Recolecta métricas"| PANEL
+    PROM -.->|"Recolecta métricas"| CADV
+    PROM -.->|"Recolecta métricas"| BBX
+    PROM -.->|"Recolecta métricas"| MYSQLX
+    PROM -.->|"Recolecta métricas"| APX
+    PROM -.->|"Recolecta métricas"| DMX
+
+    GRAF -.->|"Visualiza métricas almacenadas por"| PROM
+    PROMTAIL -.->|"Envía logs a"| LOKI
