@@ -13,21 +13,19 @@ services:
         ipv4_address: 172.20.30.254
     cap_add:
       - NET_ADMIN
-    entrypoint: >
-      sh -c "
-        echo 'Configurando forwarding...' &&
-        iptables -P FORWARD ACCEPT &&
-        iptables -F FORWARD &&
-
-        echo 'Router listo' &&
-        tail -f /dev/null
-      "
     sysctls:
       - net.ipv4.ip_forward=1
+    healthcheck:
+      test: ["CMD-SHELL", "test \"$(cat /proc/sys/net/ipv4/ip_forward)\" = \"1\""]
+      interval: 10s
+      timeout: 3s
+      retries: 5
     restart: unless-stopped
 
   db:
-    image: mysql:8.0
+    build:
+      context: .
+      dockerfile: db.Dockerfile
     container_name: base_datos
     environment:
       MYSQL_ROOT_PASSWORD: rootpass
@@ -42,14 +40,10 @@ services:
     cap_add:
       - NET_ADMIN
     entrypoint: >
-      bash -c "
-        apt-get update -qq &&
-        apt-get install -y -qq iproute2 &&
-
+      bash -lc "
         echo 'Configurando rutas DB...' &&
         ip route add 172.20.10.0/24 via 172.20.20.254 || true &&
         ip route add 172.20.30.0/24 via 172.20.20.254 || true &&
-
         exec docker-entrypoint.sh mysqld
       "
     command: >
@@ -59,14 +53,16 @@ services:
       --innodb-log-file-size=16M
       --max_connections=50
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "mysql -uroot -p$$MYSQL_ROOT_PASSWORD -e 'SELECT 1' >/dev/null 2>&1"]
       interval: 5s
       timeout: 3s
       retries: 10
     restart: unless-stopped
 
   web:
-    image: php:8.2-apache
+    build:
+      context: .
+      dockerfile: web.Dockerfile
     container_name: servidor_web
 
     depends_on:
@@ -87,8 +83,8 @@ services:
       - NET_ADMIN
 
     # 🔥 LIMITES DE RECURSOS
-    cpus: 0.5
-    mem_limit: 256m
+    cpus: 0.05
+    mem_limit: 64m
 
     entrypoint: >
       sh -c "
@@ -114,6 +110,8 @@ services:
   atacante:
     image: dyrnq/nettools:latest
     container_name: atacante
+    volumes:
+      - ../scripts:/opt/lab_scripts:ro
     networks:
       red_ataque:
         ipv4_address: 172.20.30.10
@@ -123,17 +121,19 @@ services:
       sh -c "
         apt-get update -qq &&
         apt-get install -y -qq iproute2 iputils-ping iperf3 &&
-
         sleep 3 &&
-
         ip route add 172.20.10.0/24 via 172.20.30.254 || true &&
         ip route add 172.20.20.0/24 via 172.20.30.254 || true &&
-
         echo 'Rutas configuradas en atacante:' &&
         ip route &&
-
         tail -f /dev/null
       "
+    healthcheck:
+      test: ["CMD-SHELL", "which hping3 >/dev/null && which curl >/dev/null"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
 
   monitor:
     build:
@@ -150,19 +150,25 @@ services:
     cap_add:
       - NET_ADMIN
     command: ["sleep", "infinity"]
+    healthcheck:
+      test: ["CMD-SHELL", "which tcpdump >/dev/null && which tshark >/dev/null"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
     restart: unless-stopped
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       PMA_HOST: 172.20.20.10
     ports:
       - "8081:80"
     networks:
-      red_privada:
+      red_privada: {}
     restart: unless-stopped
 
   panel_control:
@@ -170,6 +176,9 @@ services:
       context: ../panel
       dockerfile: Dockerfile
     container_name: panel_control
+    depends_on:
+      atacante:
+        condition: service_healthy
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
@@ -177,8 +186,167 @@ services:
     networks:
       red_ataque:
         ipv4_address: 172.20.30.5
+      red_monitoreo: {}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=3)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=5s
+      - --max_housekeeping_interval=15s
+    networks:
+      red_monitoreo: {}
+    ports:
+      - "8088:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+    privileged: true
+    restart: unless-stopped
+
+  docker_metrics_exporter:
+    build:
+      context: ../monitoring/docker_metrics_exporter
+      dockerfile: Dockerfile
+    container_name: docker_metrics_exporter
+    environment:
+      COMPOSE_PROJECT: infra
+      SCRAPE_PACKET_STATS: "true"
+      REFRESH_INTERVAL_SECONDS: "5"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      red_monitoreo: {}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:9151/health', timeout=3)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  blackbox_exporter:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: blackbox_exporter
+    command:
+      - --config.file=/etc/blackbox_exporter/blackbox.yml
+    networks:
+      red_publica: {}
+      red_privada: {}
+      red_monitoreo: {}
+    volumes:
+      - ../monitoring/blackbox/blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
+    restart: unless-stopped
+
+  mysqld_exporter:
+    image: prom/mysqld-exporter:v0.16.0
+    container_name: mysqld_exporter
+    command:
+      - --config.my-cnf=/etc/mysqld_exporter/.my.cnf
+    networks:
+      red_privada: {}
+      red_monitoreo: {}
+    volumes:
+      - ../monitoring/mysqld_exporter/.my.cnf:/etc/mysqld_exporter/.my.cnf:ro
     depends_on:
-      - atacante
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  apache_exporter:
+    image: lusotycoon/apache-exporter:v1.0.8
+    container_name: apache_exporter
+    command:
+      - --scrape_uri=http://172.20.10.10/server-status?auto
+    networks:
+      red_publica: {}
+      red_monitoreo: {}
+    depends_on:
+      web:
+        condition: service_healthy
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    networks:
+      red_monitoreo: {}
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - cadvisor
+      - docker_metrics_exporter
+      - blackbox_exporter
+      - mysqld_exporter
+      - apache_exporter
+      - panel_control
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: loki
+    command:
+      - -config.file=/etc/loki/local-config.yaml
+    networks:
+      red_monitoreo: {}
+    ports:
+      - "3100:3100"
+    volumes:
+      - ../monitoring/loki/local-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/loki
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    container_name: promtail
+    command:
+      - -config.file=/etc/promtail/config.yml
+    networks:
+      red_monitoreo: {}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ../monitoring/promtail/promtail-config.yml:/etc/promtail/config.yml:ro
+      - promtail_positions:/tmp/promtail
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: http://localhost:3000
+    networks:
+      red_monitoreo: {}
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
 
 networks:
   red_publica:
@@ -198,3 +366,15 @@ networks:
     ipam:
       config:
         - subnet: 172.20.30.0/24
+
+  red_monitoreo:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.40.0/24
+
+volumes:
+  grafana_data:
+  loki_data:
+  prometheus_data:
+  promtail_positions:

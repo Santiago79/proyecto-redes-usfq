@@ -3,4 +3,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec "$SCRIPT_DIR/linux/attack.sh" syn "$@"
+source "$SCRIPT_DIR/common.sh"
+
+trigger_attack "stop"
+echo
+echo "Ataques detenidos."

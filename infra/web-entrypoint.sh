@@ -1,20 +1,14 @@
 #!/bin/sh
-set -e
+set -eu
 
-echo "Instalando paquetes..."
-apt-get update
-apt-get install -y iproute2 net-tools procps default-mysql-client || apt-get install -y mariadb-client
+echo "Configurando rutas WEB..."
+ip route add 172.20.20.0/24 via 172.20.10.254 || true
+ip route add 172.20.30.0/24 via 172.20.10.254 || true
 
 echo "Esperando MySQL..."
-until mysqladmin ping -h 172.20.20.10 --silent; do
+until mysqladmin --protocol=TCP --skip-ssl ping -h 172.20.20.10 -uappuser -papppass --silent; do
   sleep 1
 done
 
 echo "MySQL listo"
-
-echo "Configurando rutas..."
-ip route add 172.20.30.0/24 via 172.20.10.254 || true
-ip route add 172.20.20.0/24 via 172.20.10.254 || true
-
-echo "Iniciando Apache..."
 exec apache2-foreground

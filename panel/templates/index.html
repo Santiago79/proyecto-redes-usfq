@@ -11,8 +11,6 @@
         }
         .udp { background: #3b82f6; } 
         .syn { background: #ef4444; } 
-        .ack { background: #dc2626; } /* Nuevo para ACK */
-        .conntrack { background: #7c3aed; } /* Nuevo ataque GOD */
         .http { background: #f59e0b; } 
         .sqli { background: #8b5cf6; } 
         .stop { background: #6b7280; width: 100%; margin-top: 20px; } 
@@ -28,8 +26,6 @@
     
     <button class="btn udp" onclick="lanzar('udp', 'UDP Flood')">UDP Flood</button>
     <button class="btn syn" onclick="lanzar('syn', 'SYN Flood (Rand Source)')">SYN Flood</button>
-    <button class="btn ack" onclick="lanzar('ack', 'ACK Flood (Rand Source)')">ACK Flood</button>
-    <button class="btn conntrack" onclick="lanzar('conntrack', 'Conntrack Exhaustion')">Conntrack Killer</button>
     
     <button class="btn http" onclick="lanzar('http', 'HTTP GET Flood')">HTTP Flood</button>
     <button class="btn sqli" onclick="lanzar('sqli_dos', 'SQLi Time-Based DoS')">SQLi DoS</button>
