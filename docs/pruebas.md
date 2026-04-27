@@ -21,11 +21,11 @@ docker exec servidor_web cat /proc/sys/net/ipv4/tcp_syncookies
 ### Scripts de validacion
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/windows/validate.ps1
+powershell -ExecutionPolicy Bypass -File scripts/scripts_captura_ataques/windows/validate.ps1
 ```
 
 ```bash
-bash scripts/linux/validate.sh
+bash scripts/scripts_captura_ataques/linux/validate.sh
 ```
 
 ### Lanzamiento de ataques finales
@@ -41,12 +41,14 @@ curl.exe http://localhost:5000/atacar/stop
 ## Criterios de exito
 
 - `servidor_web`, `base_datos`, `panel_control` y `router` operativos
+- `monitor` operativo y `router` listo para capturas
 - `prometheus`, `grafana` y `loki` operativos
 - targets `up` en Prometheus
 - solo 4 dashboards publicados en Grafana
 - metrica `attack_active` sin `ack` ni `conntrack`
 - panel sin botones de `ACK Flood` ni `Conntrack Killer`
 - metrica `lab_container_tcp_syn_recv_connections` disponible
+- generacion real de archivos `.pcapng` en `analisis/pcaps`
 
 ## Evidencias tecnicas que deben observarse
 
@@ -54,6 +56,32 @@ curl.exe http://localhost:5000/atacar/stop
 - `UDP Flood`: aumento claro en `NET I/O` y paquetes por segundo
 - `HTTP Flood`: aumento de CPU web, latencia HTTP y throughput
 - `SQLi DoS`: aumento en consultas y conexiones MySQL
+
+## Validacion de capturas Wireshark
+
+Comandos previstos:
+
+```powershell
+scripts\scripts_captura_ataques\windows\start_capture.ps1 -Mode red_publica -Label syn
+curl.exe http://localhost:5000/atacar/syn
+Start-Sleep -Seconds 5
+curl.exe http://localhost:5000/atacar/stop
+scripts\scripts_captura_ataques\windows\stop_capture.ps1
+```
+
+```bash
+bash scripts/scripts_captura_ataques/linux/start_capture.sh red_privada sqli
+curl -fsS http://localhost:5000/atacar/sqli_dos
+sleep 5
+curl -fsS http://localhost:5000/atacar/stop
+bash scripts/scripts_captura_ataques/linux/stop_capture.sh
+```
+
+Resultado esperado:
+
+- aparecen archivos `.pcap` o `.pcapng` en `analisis/pcaps`
+- el archivo puede leerse con Wireshark en el host
+- el stack de monitoreo sigue operativo despues de la captura
 
 ## Resultado de esta revision
 

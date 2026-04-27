@@ -30,6 +30,15 @@ El monitoreo quedo simplificado para la presentacion final. Se mantiene la misma
 
 `Promtail` lee los logs de contenedores Docker, agrega etiquetas y los envia a `Loki`.
 
+## Capturas complementarias para Wireshark
+
+La observabilidad del proyecto final ahora tiene dos planos paralelos:
+
+- metricas y logs en Grafana
+- capturas `.pcapng` para analisis profundo en Wireshark
+
+Las capturas no sustituyen a Grafana ni a Prometheus. Son un apoyo adicional para inspeccion de paquetes y validacion manual de trafico. El `monitor` se conserva como nodo de observacion, pero la captura efectiva se genera en `router` para ver trafico real entre subredes y se guarda en `analisis/pcaps`.
+
 ## Exporters e integraciones activas
 
 | Componente | Que extrae | Desde donde | Como llega a Grafana |

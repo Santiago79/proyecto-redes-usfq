@@ -44,8 +44,9 @@ Describir la topologia del proyecto final y dejar claro que la observabilidad se
 1. El host entra a `EmpresaX` por `localhost:8080`.
 2. `servidor_web` consulta a `base_datos` por la red privada a traves del router virtual.
 3. `panel_control` ordena los cuatro ataques finales sobre el web o la base de datos desde la red de ataque.
-4. `monitor` conserva la capacidad academica de ver las tres redes.
-5. `Prometheus` y `Grafana` observan el laboratorio desde `red_monitoreo`.
+4. `monitor` conserva la capacidad academica de ver las tres redes y coordina la observacion del escenario.
+5. `router` puede generar capturas persistentes en `analisis/pcaps`, porque es el punto de paso real entre subredes.
+6. `Prometheus` y `Grafana` observan el laboratorio desde `red_monitoreo`.
 
 ## Conservacion de interfaces
 

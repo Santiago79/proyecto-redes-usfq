@@ -109,6 +109,56 @@ graph TD
 - `Base de Datos`: muestra disponibilidad MySQL, conexiones y consultas.
 - `Logs del Laboratorio`: correlaciona logs del web, MySQL y panel.
 
+## Capturas para Wireshark
+
+El proyecto ahora permite generar capturas `.pcap` o `.pcapng` para Wireshark sin romper la topologia ni el stack de observabilidad. El `monitor` se conserva como nodo de observacion del diseno, y la captura efectiva se ejecuta en `router` porque es el punto real de transito entre subredes en esta topologia Docker. Las capturas se guardan en la carpeta persistente:
+
+- `analisis/pcaps`
+
+Automatizacion lista para capturar los cuatro ataques durante 45 segundos:
+
+- Linux: `scripts/scripts_captura_ataques/linux/capture_attack.sh` y `scripts/scripts_captura_ataques/linux/capture_all_attacks.sh`
+- Windows PowerShell: `scripts/scripts_captura_ataques/windows/capture_attack.ps1` y `scripts/scripts_captura_ataques/windows/capture_all_attacks.ps1`
+- Windows batch: `scripts/scripts_captura_ataques/windows/capture_attack.bat` y `scripts/scripts_captura_ataques/windows/capture_all_attacks.bat`
+
+Ejemplos:
+
+```bash
+bash scripts/scripts_captura_ataques/linux/start_capture.sh red_publica syn
+bash scripts/scripts_captura_ataques/linux/stop_capture.sh
+```
+
+```powershell
+scripts\scripts_captura_ataques\windows\start_capture.ps1 -Mode red_privada -Label sqli
+scripts\scripts_captura_ataques\windows\stop_capture.ps1
+```
+
+Estas capturas se abren en Wireshark directamente desde el host. Se recomienda:
+
+- `red_publica` para `SYN Flood`, `UDP Flood` y `HTTP Flood`
+- `red_privada` para `SQLi DoS`
+- `red_ataque` para observar la emision desde el atacante
+
+- `todas` cuando se quiere una vista general del escenario
+
+Para generar las cuatro capturas de demostracion de una sola vez:
+
+```bash
+bash scripts/scripts_captura_ataques/linux/capture_all_attacks.sh 45
+```
+
+```powershell
+scripts\scripts_captura_ataques\windows\capture_all_attacks.ps1 -DurationSeconds 45
+```
+
+```cmd
+scripts\scripts_captura_ataques\windows\capture_all_attacks.bat -DurationSeconds 45
+```
+
+El resumen de la corrida queda en:
+
+- `analisis/pcaps/capturas_45s_resumen.txt`
+
 ## Servicios principales
 
 - `router`
@@ -133,26 +183,27 @@ graph TD
 ### Linux
 
 ```bash
-bash scripts/linux/up.sh
-bash scripts/linux/validate.sh
-bash scripts/linux/attack.sh syn
-bash scripts/linux/stop_attacks.sh
+bash scripts/scripts_captura_ataques/linux/up.sh
+bash scripts/scripts_captura_ataques/linux/validate.sh
+bash scripts/scripts_captura_ataques/linux/attack.sh syn
+bash scripts/scripts_captura_ataques/linux/stop_attacks.sh
 ```
 
 ### Windows
 
 ```powershell
-scripts\windows\up.ps1
-scripts\windows\validate.ps1
-scripts\windows\attack.ps1 -Attack syn
-scripts\windows\stop_attacks.ps1
+scripts\scripts_captura_ataques\windows\up.ps1
+scripts\scripts_captura_ataques\windows\validate.ps1
+scripts\scripts_captura_ataques\windows\attack.ps1 -Attack syn
+scripts\scripts_captura_ataques\windows\stop_attacks.ps1
 ```
 
 ## Documentacion principal
 
-- [README2_MONITOREO_CAMBIOS.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/README2_MONITOREO_CAMBIOS.md>)
-- [docs/arquitectura.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/arquitectura.md>)
-- [docs/monitoreo.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/monitoreo.md>)
-- [docs/linux.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/linux.md>)
-- [docs/windows.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/windows.md>)
-- [docs/pruebas.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/pruebas.md>)
+- [README2_MONITOREO_CAMBIOS.md](README2_MONITOREO_CAMBIOS.md)
+- [docs/arquitectura.md](docs/arquitectura.md)
+- [docs/monitoreo.md](docs/monitoreo.md)
+- [docs/capturas_wireshark.md](docs/capturas_wireshark.md)
+- [docs/linux.md](docs/linux.md)
+- [docs/windows.md](docs/windows.md)
+- [docs/pruebas.md](docs/pruebas.md)
