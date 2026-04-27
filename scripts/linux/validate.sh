@@ -75,7 +75,7 @@ targets_up() {
 dashboards_ready() {
   local response
   response="$(curl -fsS -u admin:admin "$GRAFANA_URL/api/search?query=")"
-  for title in "Infraestructura General" "Servidor Web" "Base de Datos" "Red y Ataques" "Academico Explicativo" "Logs del Laboratorio"; do
+  for title in "Servidor Web" "Base de Datos" "Red y Ataques" "Logs del Laboratorio"; do
     if ! grep -q "\"title\":\"$title\"" <<<"$response"; then
       return 1
     fi
@@ -88,6 +88,39 @@ lab_metrics_ready() {
   grep -q '"container":"servidor_web"' <<<"$response" &&
     grep -q '"container":"base_datos"' <<<"$response" &&
     grep -q '"container":"atacante"' <<<"$response"
+}
+
+dashboards_simplified() {
+  local response
+  response="$(curl -fsS -u admin:admin "$GRAFANA_URL/api/search?query=")"
+  grep -q '"title":"Red y Ataques"' <<<"$response" &&
+    grep -q '"title":"Servidor Web"' <<<"$response" &&
+    grep -q '"title":"Base de Datos"' <<<"$response" &&
+    grep -q '"title":"Logs del Laboratorio"' <<<"$response" &&
+    ! grep -q '"title":"Infraestructura General"' <<<"$response" &&
+    ! grep -q '"title":"Academico Explicativo"' <<<"$response"
+}
+
+attacks_simplified() {
+  local response
+  response="$(curl -fsS --get --data-urlencode 'query=attack_active' "$PROM_URL/api/v1/query")"
+  grep -q '"attack":"udp"' <<<"$response" &&
+    grep -q '"attack":"syn"' <<<"$response" &&
+    grep -q '"attack":"http"' <<<"$response" &&
+    grep -q '"attack":"sqli_dos"' <<<"$response" &&
+    ! grep -q '"attack":"ack"' <<<"$response" &&
+    ! grep -q '"attack":"conntrack"' <<<"$response"
+}
+
+panel_buttons_simplified() {
+  local html
+  html="$(curl -fsS "$PANEL_URL")"
+  grep -q 'UDP Flood' <<<"$html" &&
+    grep -q 'SYN Flood' <<<"$html" &&
+    grep -q 'HTTP Flood' <<<"$html" &&
+    grep -q 'SQLi DoS' <<<"$html" &&
+    ! grep -q 'ACK Flood' <<<"$html" &&
+    ! grep -q 'Conntrack Killer' <<<"$html"
 }
 
 check "router activo" is_running router
@@ -105,7 +138,10 @@ check "Grafana responde 200 o 302" grafana_ready
 check "Loki ready" loki_ready
 check "Prometheus scrapea targets reales" targets_up
 check "Grafana provisiono dashboards" dashboards_ready
+check "Grafana quedo simplificado a 4 dashboards" dashboards_simplified
 check "Prometheus expone metricas del laboratorio" lab_metrics_ready
+check "Solo quedan 4 ataques en metricas del panel" attacks_simplified
+check "El panel solo muestra los 4 ataques finales" panel_buttons_simplified
 
 if (( failures > 0 )); then
   echo

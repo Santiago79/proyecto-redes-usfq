@@ -1,134 +1,158 @@
-# Laboratorio de Red Empresarial con Docker, Ataques DDoS y Observabilidad
+# Simulacion de Red Empresarial con Docker
 
-Este repositorio implementa un laboratorio academico de simulacion de red empresarial con Docker. El objetivo es demostrar, observar y medir el impacto de ataques de denegacion de servicio sobre servicios criticos, conservando la topologia original del proyecto: DMZ, red privada, red de ataque, router virtual y monitor multi-interfaz.
+Proyecto final de redes orientado a demostrar, medir y explicar el impacto de ataques controlados sobre una infraestructura empresarial segmentada. El proyecto conserva su topologia base con una DMZ publica, una red privada, una red de ataque, un router virtual y un monitor multi-interfaz. Sobre esa base se mantiene una capa de observabilidad con Prometheus, Grafana y Loki para apoyar la presentacion final.
 
-La infraestructura principal se mantiene con los mismos roles logicos del laboratorio:
+## Integrantes
 
-- `servidor_web` en `172.20.10.10` dentro de la DMZ.
-- `base_datos` en `172.20.20.10` dentro de la red privada.
-- `atacante` en `172.20.30.10` dentro de la red de ataque.
-- `router` como gateway virtual `.254` en las tres subredes originales.
-- `monitor` conectado a las tres redes para observacion y captura.
-- `panel_control` como interfaz de lanzamiento de ataques.
-- `EmpresaX` como interfaz visual del servicio expuesto.
+- Santiago Reategui
+- Maria Emilia Cueva
+- Jorge Gomez
 
-## Topologia conservada
+## Estado final del proyecto
 
-Las redes academicas originales se preservan:
+- Ataques disponibles: `SYN Flood`, `UDP Flood`, `HTTP Flood`, `SQLi DoS`
+- Interfaces preservadas: `EmpresaX` y `Panel de Control DDoS y Explotacion`
+- Dashboards finales:
+  - `Red y Ataques`
+  - `Servidor Web`
+  - `Base de Datos`
+  - `Logs del Laboratorio`
 
-- `red_publica`: `172.20.10.0/24`
-- `red_privada`: `172.20.20.0/24`
-- `red_ataque`: `172.20.30.0/24`
+La simplificacion final redujo ataques y dashboards para hacer la presentacion mas clara, pero no modifico la infraestructura base ni la topologia logica del proyecto.
 
-La unica adicion estructural es `red_monitoreo` (`172.20.40.0/24`), usada exclusivamente para la capa de observabilidad. No reemplaza la topologia original ni altera el flujo de trafico del laboratorio.
+## Topologia de red
 
 ```mermaid
 graph TD
-    ATT["Atacante<br/>172.20.30.10"]
-    WEB["Servidor web<br/>172.20.10.10"]
-    DB["MySQL<br/>172.20.20.10"]
-    MON["Monitor<br/>10.50 / 20.50 / 30.50"]
-    RTR["Router virtual<br/>10.254 / 20.254 / 30.254"]
-    PANEL["Panel de control<br/>172.20.30.5"]
-    OBS["Grafana + Prometheus + Loki<br/>172.20.40.0/24"]
+    subgraph "Host Fisico"
+        subgraph "RED DOCKER: 172.20.0.0/16 (Superred)"
+            subgraph "Subred Publica (DMZ) - 172.20.10.0/24"
+                WEB["Servidor Web EmpresaX<br/>Apache + PHP<br/>172.20.10.10<br/>tcp_syncookies=0"]
+            end
 
-    ATT --> RTR
-    WEB --> RTR
-    DB --> RTR
-    MON --> RTR
-    PANEL --> ATT
-    OBS -. observabilidad .-> WEB
-    OBS -. observabilidad .-> DB
-    OBS -. observabilidad .-> PANEL
+            subgraph "Subred Privada - 172.20.20.0/24"
+                DB["Base de Datos MySQL<br/>172.20.20.10<br/>Sin puerto expuesto al host"]
+            end
+
+            subgraph "Subred de Ataque - 172.20.30.0/24"
+                ATTACKER["Atacante<br/>172.20.30.10"]
+                PANEL["Panel de Control<br/>172.20.30.5<br/>Puerto host 5000"]
+            end
+
+            subgraph "Router Virtual"
+                ROUTER["router<br/>eth0: 172.20.10.254<br/>eth1: 172.20.20.254<br/>eth2: 172.20.30.254"]
+            end
+
+            subgraph "Monitor Multi-Interfaz"
+                MONITOR["monitor<br/>172.20.10.50<br/>172.20.20.50<br/>172.20.30.50"]
+            end
+
+            subgraph "Red de Monitoreo - 172.20.40.0/24"
+                OBS["Prometheus, Grafana, Loki, Promtail y exporters"]
+            end
+        end
+    end
+
+    WEB --- ROUTER
+    DB --- ROUTER
+    ATTACKER --- ROUTER
+    PANEL --- ROUTER
+    MONITOR --- ROUTER
+
+    ATTACKER -.->|"SYN Flood / UDP Flood / HTTP Flood"| WEB
+    ATTACKER -.->|"SQLi DoS (via HTTP hacia login vulnerable)"| WEB
+    WEB -.->|"Consultas SQL"| DB
+    OBS -.->|"Recoleccion y visualizacion de metricas y logs"| WEB
+    OBS -.->|"Recoleccion y visualizacion de metricas y logs"| DB
+    OBS -.->|"Recoleccion y visualizacion de metricas y logs"| PANEL
 ```
 
-## Ataques preservados
+## Redes utilizadas y redes afectadas
 
-El laboratorio mantiene disponibles los seis ataques solicitados:
+### `red_publica` - `172.20.10.0/24`
 
-- `UDP Flood`
-- `SYN Flood`
-- `ACK Flood`
-- `Conntrack Killer`
-- `HTTP Flood`
-- `SQLi DoS`
+- Aloja `servidor_web`.
+- Es la red mas visible durante `SYN Flood`, `UDP Flood` y `HTTP Flood`.
+- Aqui se observa el impacto sobre latencia HTTP, throughput, CPU del web, trafico y conexiones `SYN_RECV`.
 
-Todos se siguen lanzando desde el `panel_control` o desde scripts reproducibles en `scripts/linux` y `scripts/windows`.
+### `red_privada` - `172.20.20.0/24`
 
-## Stack de monitoreo
+- Aloja `base_datos`.
+- Se ve afectada principalmente por el trafico legitimo `web -> db` y por el efecto indirecto o directo de `SQLi DoS`.
+- Aqui se observa el impacto sobre conexiones MySQL y ritmo de consultas.
 
-La observabilidad se implemento con:
+### `red_ataque` - `172.20.30.0/24`
 
-- `Grafana`
-- `Prometheus`
-- `cAdvisor`
-- `Blackbox Exporter`
-- `mysqld_exporter`
+- Aloja `atacante` y `panel_control`.
+- Desde aqui se originan los cuatro ataques finales.
+- Permite correlacionar ataques activos, volumen de trafico emitido y eventos del panel.
+
+### `red_monitoreo` - `172.20.40.0/24`
+
+- Aloja la capa de observabilidad.
+- No reemplaza la topologia original; la complementa.
+- Desde aqui `Prometheus` scrapea metricas y `Grafana` consulta `Prometheus` y `Loki`.
+
+## Ataques finales y objetivo tecnico
+
+| Ataque | Objetivo principal | Red mas afectada | Evidencia principal |
+|---|---|---|---|
+| `SYN Flood` | pila TCP del servidor web | `red_publica` | paquetes por segundo + `SYN_RECV` |
+| `UDP Flood` | ancho de banda y trafico | `red_publica` | paquetes por segundo + `NET I/O` |
+| `HTTP Flood` | procesamiento del servidor web | `red_publica` | CPU web + latencia + throughput |
+| `SQLi DoS` | motor MySQL | `red_privada` | conexiones MySQL + ritmo de consultas |
+
+## Monitoreo final
+
+- `Red y Ataques`: resume ataques activos, paquetes por segundo y `NET I/O`.
+- `Servidor Web`: muestra CPU, latencia HTTP, throughput y conexiones `SYN_RECV`.
+- `Base de Datos`: muestra disponibilidad MySQL, conexiones y consultas.
+- `Logs del Laboratorio`: correlaciona logs del web, MySQL y panel.
+
+## Servicios principales
+
+- `router`
+- `servidor_web`
+- `base_datos`
+- `atacante`
+- `monitor`
+- `panel_control`
+- `phpmyadmin`
+- `prometheus`
+- `grafana`
+- `loki`
+- `promtail`
+- `blackbox_exporter`
 - `apache_exporter`
-- `Loki`
-- `Promtail`
-- `docker_metrics_exporter` propio para metricas de contenedores y red con mejor fidelidad en Docker Desktop/WSL
+- `mysqld_exporter`
+- `cadvisor`
+- `docker_metrics_exporter`
 
-Dashboards provisionados automaticamente en Grafana:
-
-- `Infraestructura General`
-- `Servidor Web`
-- `Base de Datos`
-- `Red y Ataques`
-- `Academico Explicativo`
-- `Logs del Laboratorio`
-
-## Inicio rapido
-
-### Windows
-
-```powershell
-scripts\windows\up.ps1
-scripts\windows\validate.ps1
-```
+## Uso rapido
 
 ### Linux
 
 ```bash
 bash scripts/linux/up.sh
 bash scripts/linux/validate.sh
+bash scripts/linux/attack.sh syn
+bash scripts/linux/stop_attacks.sh
 ```
 
-## URLs utiles
+### Windows
 
-- EmpresaX: [http://localhost:8080](http://localhost:8080)
-- Panel DDoS: [http://localhost:5000](http://localhost:5000)
-- Grafana: [http://localhost:3000](http://localhost:3000)
-- Prometheus: [http://localhost:9090](http://localhost:9090)
-- phpMyAdmin: [http://localhost:8081](http://localhost:8081)
-- Loki ready: [http://localhost:3100/ready](http://localhost:3100/ready)
+```powershell
+scripts\windows\up.ps1
+scripts\windows\validate.ps1
+scripts\windows\attack.ps1 -Attack syn
+scripts\windows\stop_attacks.ps1
+```
 
-Credenciales iniciales de Grafana:
+## Documentacion principal
 
-- Usuario: `admin`
-- Clave: `admin`
-
-## Scripts principales
-
-- Levantar entorno: `scripts/windows/up.ps1` o `scripts/linux/up.sh`
-- Validar entorno: `scripts/windows/validate.ps1` o `scripts/linux/validate.sh`
-- Generar trafico legitimo: `scripts/windows/generate_legitimate_traffic.ps1` o `scripts/linux/generate_legitimate_traffic.sh`
-- Lanzar ataques: `scripts/windows/attack.ps1 -Attack <ataque>` o `scripts/linux/attack.sh <ataque>`
-- Detener ataques: `scripts/windows/stop_attacks.ps1` o `scripts/linux/stop_attacks.sh`
-- Reiniciar laboratorio: `scripts/windows/reset_lab.ps1` o `scripts/linux/reset_lab.sh`
-- Consultar logs: `scripts/windows/logs.ps1` o `scripts/linux/logs.sh`
-- Consultar metricas: `scripts/windows/metrics.ps1` o `scripts/linux/metrics.sh`
-
-## Documentacion
-
-- [README2_MONITOREO_CAMBIOS.md](README2_MONITOREO_CAMBIOS.md)
-- [docs/arquitectura.md](docs/arquitectura.md)
-- [docs/monitoreo.md](docs/monitoreo.md)
-- [docs/linux.md](docs/linux.md)
-- [docs/windows.md](docs/windows.md)
-- [docs/pruebas.md](docs/pruebas.md)
-- [CHANGELOG_CODEX.md](CHANGELOG_CODEX.md)
-
-## Nota sobre interfaces preservadas
-
-Las vistas `EmpresaX` y `Panel de Control DDoS y Explotacion` se conservaron sin redisenos. La capa de monitoreo se incorporo como complemento externo en Grafana, no como sustitucion de las interfaces originales del laboratorio.
+- [README2_MONITOREO_CAMBIOS.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/README2_MONITOREO_CAMBIOS.md>)
+- [docs/arquitectura.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/arquitectura.md>)
+- [docs/monitoreo.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/monitoreo.md>)
+- [docs/linux.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/linux.md>)
+- [docs/windows.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/windows.md>)
+- [docs/pruebas.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/pruebas.md>)

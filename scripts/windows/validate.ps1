@@ -35,7 +35,7 @@ function Targets-Up {
 
 function Dashboards-Ready {
     $response = (& curl.exe -s -u "admin:admin" "$Script:GrafanaUrl/api/search?query=") | ConvertFrom-Json
-    $titles = "Infraestructura General", "Servidor Web", "Base de Datos", "Red y Ataques", "Academico Explicativo", "Logs del Laboratorio"
+    $titles = "Servidor Web", "Base de Datos", "Red y Ataques", "Logs del Laboratorio"
     foreach ($title in $titles) {
         if (-not ($response | Where-Object { $_.title -eq $title })) {
             return $false
@@ -48,6 +48,38 @@ function Lab-Metrics-Ready {
     $response = (& curl.exe -s --get --data-urlencode "query=lab_container_up" "$Script:PromUrl/api/v1/query") | ConvertFrom-Json
     $containers = $response.data.result.metric.container
     return ($containers -contains "servidor_web") -and ($containers -contains "base_datos") -and ($containers -contains "atacante")
+}
+
+function Dashboards-Simplified {
+    $response = (& curl.exe -s -u "admin:admin" "$Script:GrafanaUrl/api/search?query=") | ConvertFrom-Json
+    $titles = $response.title
+    return ($titles -contains "Red y Ataques") -and
+        ($titles -contains "Servidor Web") -and
+        ($titles -contains "Base de Datos") -and
+        ($titles -contains "Logs del Laboratorio") -and
+        (-not ($titles -contains "Infraestructura General")) -and
+        (-not ($titles -contains "Academico Explicativo"))
+}
+
+function Attacks-Simplified {
+    $response = (& curl.exe -s --get --data-urlencode "query=attack_active" "$Script:PromUrl/api/v1/query") | ConvertFrom-Json
+    $attacks = $response.data.result.metric.attack
+    return ($attacks -contains "udp") -and
+        ($attacks -contains "syn") -and
+        ($attacks -contains "http") -and
+        ($attacks -contains "sqli_dos") -and
+        (-not ($attacks -contains "ack")) -and
+        (-not ($attacks -contains "conntrack"))
+}
+
+function Panel-Buttons-Simplified {
+    $html = & curl.exe -s $Script:PanelUrl
+    return ($html -match "UDP Flood") -and
+        ($html -match "SYN Flood") -and
+        ($html -match "HTTP Flood") -and
+        ($html -match "SQLi DoS") -and
+        (-not ($html -match "ACK Flood")) -and
+        (-not ($html -match "Conntrack Killer"))
 }
 
 Assert-Step "router activo" { (Get-ContainerState "router").Status -eq "running" }
@@ -65,7 +97,10 @@ Assert-Step "Grafana responde 200 o 302" { (Get-HttpCode $Script:GrafanaUrl) -in
 Assert-Step "Loki ready" { ((& curl.exe -s "$Script:LokiUrl/ready").Trim()) -eq "ready" }
 Assert-Step "Prometheus scrapea targets reales" { Targets-Up }
 Assert-Step "Grafana provisiono dashboards" { Dashboards-Ready }
+Assert-Step "Grafana quedo simplificado a 4 dashboards" { Dashboards-Simplified }
 Assert-Step "Prometheus expone metricas del laboratorio" { Lab-Metrics-Ready }
+Assert-Step "Solo quedan 4 ataques en metricas del panel" { Attacks-Simplified }
+Assert-Step "El panel solo muestra los 4 ataques finales" { Panel-Buttons-Simplified }
 
 if ($failures -gt 0) {
     throw "La validacion detecto $failures fallo(s)."

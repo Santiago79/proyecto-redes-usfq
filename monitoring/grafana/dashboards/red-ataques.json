@@ -132,13 +132,14 @@
         "defaults": {
           "color": {
             "mode": "palette-classic"
-          }
+          },
+          "unit": "pps"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
-        "w": 8,
+        "w": 24,
         "x": 0,
         "y": 4
       },
@@ -156,13 +157,27 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "increase(attack_launch_total[15m])",
-          "legendFormat": "{{attack}}",
+          "expr": "rate(lab_container_network_tx_packets_total{service=\"atacante\"}[30s])",
+          "legendFormat": "Atacante TX pkt/s",
           "range": true,
           "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "rate(lab_container_network_rx_packets_total{service=\"router\"}[30s])",
+          "legendFormat": "Router RX pkt/s",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "rate(lab_container_network_rx_packets_total{service=\"web\"}[30s])",
+          "legendFormat": "Web RX pkt/s",
+          "range": true,
+          "refId": "C"
         }
       ],
-      "title": "Lanzamientos por Ataque (15 min)",
+      "title": "Paquetes por Segundo",
       "type": "timeseries"
     },
     {
@@ -181,9 +196,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 16,
-        "x": 8,
-        "y": 4
+        "w": 24,
+        "x": 0,
+        "y": 12
       },
       "id": 4,
       "options": {
@@ -206,196 +221,20 @@
         },
         {
           "editorMode": "code",
-          "expr": "rate(lab_container_network_rx_bytes_total{service=\"web\"}[30s])",
-          "legendFormat": "Web RX",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "editorMode": "code",
-          "expr": "rate(lab_container_network_rx_bytes_total{service=\"db\"}[30s])",
-          "legendFormat": "DB RX",
-          "range": true,
-          "refId": "C"
-        },
-        {
-          "editorMode": "code",
           "expr": "rate(lab_container_network_rx_bytes_total{service=\"router\"}[30s])",
           "legendFormat": "Router RX",
           "range": true,
-          "refId": "D"
-        }
-      ],
-      "title": "Trafico Principal Durante Ataques",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "unit": "pps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 12
-      },
-      "id": 5,
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "rate(lab_container_network_tx_packets_total{service=\"atacante\"}[30s])",
-          "legendFormat": "Atacante TX pkt/s",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "editorMode": "code",
-          "expr": "rate(lab_container_network_rx_packets_total{service=\"web\"}[30s])",
-          "legendFormat": "Web RX pkt/s",
-          "range": true,
           "refId": "B"
         },
         {
           "editorMode": "code",
-          "expr": "rate(lab_container_network_rx_packets_total{service=\"db\"}[30s])",
-          "legendFormat": "DB RX pkt/s",
+          "expr": "rate(lab_container_network_rx_bytes_total{service=\"web\"}[30s])",
+          "legendFormat": "Web RX",
           "range": true,
           "refId": "C"
         }
       ],
-      "title": "Paquetes por Segundo",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 12
-      },
-      "id": 6,
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "rate(lab_container_network_rx_dropped_total{service=~\"web|db|router\"}[1m])",
-          "legendFormat": "{{service}} RX drops",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "editorMode": "code",
-          "expr": "rate(lab_container_network_rx_errors_total{service=~\"web|db|router\"}[1m])",
-          "legendFormat": "{{service}} RX errors",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "editorMode": "code",
-          "expr": "rate(lab_container_network_tx_errors_total{service=\"atacante\"}[1m])",
-          "legendFormat": "Atacante TX errors",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "title": "Drops y Errores Observables",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 20
-      },
-      "id": 7,
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "probe_duration_seconds{job=\"blackbox_http\",instance=\"http://172.20.10.10/\"}",
-          "legendFormat": "Latencia Web",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "editorMode": "code",
-          "expr": "mysql_global_status_threads_connected",
-          "legendFormat": "Conexiones DB",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "editorMode": "code",
-          "expr": "lab_container_cpu_percent{service=\"router\"}",
-          "legendFormat": "CPU Router",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "title": "Correlacion Temporal de Impacto",
+      "title": "NET I/O del Atacante hacia la DMZ",
       "type": "timeseries"
     }
   ],
@@ -404,7 +243,8 @@
   "style": "dark",
   "tags": [
     "red",
-    "ataques"
+    "ataques",
+    "final"
   ],
   "templating": {
     "list": []
@@ -417,6 +257,6 @@
   "timezone": "browser",
   "title": "Red y Ataques",
   "uid": "red-ataques",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

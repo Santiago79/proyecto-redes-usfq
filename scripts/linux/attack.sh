@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
 if [[ $# -lt 1 ]]; then
-  echo "Uso: $(basename "$0") <udp|syn|ack|conntrack|http|sqli_dos>" >&2
+  echo "Uso: $(basename "$0") <udp|syn|http|sqli_dos>" >&2
   exit 1
 fi
 

@@ -72,6 +72,11 @@ CONTAINER_NETWORK_TX_DROPPED = Gauge(
     "Drops TX por contenedor",
     LABELS,
 )
+CONTAINER_TCP_SYN_RECV = Gauge(
+    "lab_container_tcp_syn_recv_connections",
+    "Conexiones TCP del contenedor en estado SYN_RECV",
+    LABELS,
+)
 CONTAINER_UPTIME = Gauge(
     "lab_container_uptime_seconds",
     "Uptime aproximado del contenedor en segundos",
@@ -171,6 +176,22 @@ def network_packets(container) -> Dict[str, float]:
     return totals
 
 
+def tcp_syn_recv_connections(container) -> float:
+    command = (
+        "command -v ss >/dev/null 2>&1 || { echo 0; exit 0; }; "
+        "ss -tan state syn-recv 2>/dev/null | tail -n +2 | wc -l | tr -d ' '"
+    )
+    result = container.exec_run(["sh", "-lc", command], demux=False)
+    if result.exit_code != 0:
+        return 0.0
+
+    output = result.output.decode("utf-8", errors="ignore").strip() or "0"
+    try:
+        return float(output)
+    except ValueError:
+        return 0.0
+
+
 def refresh_metrics():
     global last_refresh_timestamp
 
@@ -202,6 +223,7 @@ def refresh_metrics():
             CONTAINER_NETWORK_TX_ERRORS.labels(*label_tuple).set(0)
             CONTAINER_NETWORK_RX_DROPPED.labels(*label_tuple).set(0)
             CONTAINER_NETWORK_TX_DROPPED.labels(*label_tuple).set(0)
+            CONTAINER_TCP_SYN_RECV.labels(*label_tuple).set(0)
             CONTAINER_SCRAPE_OK.labels(*label_tuple).set(0)
             continue
 
@@ -209,6 +231,7 @@ def refresh_metrics():
             stats = container.stats(stream=False)
             packets = network_packets(container)
             network = network_bytes(stats)
+            syn_recv = tcp_syn_recv_connections(container)
             memory = stats.get("memory_stats", {})
 
             CONTAINER_CPU.labels(*label_tuple).set(cpu_percent(stats))
@@ -222,8 +245,10 @@ def refresh_metrics():
             CONTAINER_NETWORK_TX_ERRORS.labels(*label_tuple).set(packets["tx_errors"])
             CONTAINER_NETWORK_RX_DROPPED.labels(*label_tuple).set(packets["rx_dropped"])
             CONTAINER_NETWORK_TX_DROPPED.labels(*label_tuple).set(packets["tx_dropped"])
+            CONTAINER_TCP_SYN_RECV.labels(*label_tuple).set(syn_recv)
             CONTAINER_SCRAPE_OK.labels(*label_tuple).set(1)
         except DockerException:
+            CONTAINER_TCP_SYN_RECV.labels(*label_tuple).set(0)
             CONTAINER_SCRAPE_OK.labels(*label_tuple).set(0)
 
     last_refresh_timestamp = now

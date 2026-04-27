@@ -26,13 +26,11 @@ normalize_attack() {
   case "${raw,,}" in
     udp|udp_flood) echo "udp" ;;
     syn|syn_flood) echo "syn" ;;
-    ack|ack_flood) echo "ack" ;;
-    conntrack|conntrack_killer) echo "conntrack" ;;
     http|http_flood) echo "http" ;;
     sqli|sqli_dos|sqlidos|sqli-flood) echo "sqli_dos" ;;
     *)
       echo "Ataque no reconocido: $raw" >&2
-      echo "Opciones: udp, syn, ack, conntrack, http, sqli_dos" >&2
+      echo "Opciones: udp, syn, http, sqli_dos" >&2
       exit 1
       ;;
   esac

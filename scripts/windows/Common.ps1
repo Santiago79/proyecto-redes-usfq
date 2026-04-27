@@ -31,17 +31,13 @@ function Resolve-AttackKey {
         "udp_flood" { return "udp" }
         "syn" { return "syn" }
         "syn_flood" { return "syn" }
-        "ack" { return "ack" }
-        "ack_flood" { return "ack" }
-        "conntrack" { return "conntrack" }
-        "conntrack_killer" { return "conntrack" }
         "http" { return "http" }
         "http_flood" { return "http" }
         "sqli" { return "sqli_dos" }
         "sqli_dos" { return "sqli_dos" }
         "sqlidos" { return "sqli_dos" }
         default {
-            throw "Ataque no reconocido: $Attack. Opciones: udp, syn, ack, conntrack, http, sqli_dos"
+            throw "Ataque no reconocido: $Attack. Opciones: udp, syn, http, sqli_dos"
         }
     }
 }

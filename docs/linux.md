@@ -25,8 +25,9 @@ La validacion comprueba:
 - `tcp_syncookies=0`
 - disponibilidad de EmpresaX, panel, Grafana y Loki
 - targets `up` en Prometheus
-- dashboards provisionados en Grafana
+- dashboards simplificados provisionados en Grafana
 - presencia de metricas del laboratorio
+- ausencia de `ACK Flood` y `Conntrack Killer`
 
 ## Generar trafico legitimo
 
@@ -43,11 +44,16 @@ Salida por defecto:
 ```bash
 bash scripts/linux/attack.sh udp
 bash scripts/linux/attack.sh syn
-bash scripts/linux/attack.sh ack
-bash scripts/linux/attack.sh conntrack
 bash scripts/linux/attack.sh http
 bash scripts/linux/attack.sh sqli_dos
 ```
+
+Ataques finales permitidos:
+
+- `udp`
+- `syn`
+- `http`
+- `sqli_dos`
 
 ## Detener ataques
 
@@ -82,5 +88,5 @@ bash scripts/linux/metrics.sh
 ## Troubleshooting rapido
 
 - Si Docker pide privilegios, agrega tu usuario al grupo `docker` o ejecuta con el mecanismo habitual de tu distribucion.
-- Si `Grafana` no muestra dashboards, reejecuta `bash scripts/linux/validate.sh` y revisa `docker compose -f infra/docker-compose.yml logs grafana prometheus`.
+- Si `Grafana` no muestra los cuatro dashboards finales, reejecuta `bash scripts/linux/validate.sh` y revisa `docker compose -f infra/docker-compose.yml logs grafana prometheus`.
 - Si un ataque queda activo, usa `bash scripts/linux/stop_attacks.sh`.

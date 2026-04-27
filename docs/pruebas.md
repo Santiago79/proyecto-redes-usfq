@@ -1,12 +1,13 @@
 # Validaciones y pruebas ejecutadas
 
-## Contexto de validacion
+## Objetivo de esta fase
 
-- Fecha local de trabajo: `2026-04-21`
-- Zona horaria local: `America/Bogota`
-- Muchos logs de contenedores quedaron en UTC y por eso aparecen como `2026-04-22T...Z`
+Validar que la simplificacion final no rompe el proyecto y deja solo:
 
-## Comandos ejecutados
+- 4 ataques: `SYN Flood`, `UDP Flood`, `HTTP Flood`, `SQLi DoS`
+- 4 dashboards: `Red y Ataques`, `Servidor Web`, `Base de Datos`, `Logs del Laboratorio`
+
+## Comandos de validacion previstos
 
 ### Estado general
 
@@ -27,75 +28,43 @@ powershell -ExecutionPolicy Bypass -File scripts/windows/validate.ps1
 bash scripts/linux/validate.sh
 ```
 
-### Ataques y evidencias
+### Lanzamiento de ataques finales
 
 ```powershell
 curl.exe http://localhost:5000/atacar/http
 curl.exe http://localhost:5000/atacar/sqli_dos
 curl.exe http://localhost:5000/atacar/udp
 curl.exe http://localhost:5000/atacar/syn
-curl.exe http://localhost:5000/atacar/ack
-curl.exe http://localhost:5000/atacar/conntrack
 curl.exe http://localhost:5000/atacar/stop
 ```
 
-## Resultados confirmados
+## Criterios de exito
 
-### Estado de servicios
+- `servidor_web`, `base_datos`, `panel_control` y `router` operativos
+- `prometheus`, `grafana` y `loki` operativos
+- targets `up` en Prometheus
+- solo 4 dashboards publicados en Grafana
+- metrica `attack_active` sin `ack` ni `conntrack`
+- panel sin botones de `ACK Flood` ni `Conntrack Killer`
+- metrica `lab_container_tcp_syn_recv_connections` disponible
 
-- `servidor_web`: healthy
-- `base_datos`: healthy
-- `panel_control`: healthy
-- `router`: healthy
-- `prometheus`: up
-- `grafana`: up
-- `loki`: ready
-- `apache_exporter`: up
-- `mysqld_exporter`: up
-- `blackbox_exporter`: up
-- `docker_metrics_exporter`: up
-- `cadvisor`: up
+## Evidencias tecnicas que deben observarse
 
-### Dashboards en Grafana
+- `SYN Flood`: aumento en paquetes por segundo y en `lab_container_tcp_syn_recv_connections`
+- `UDP Flood`: aumento claro en `NET I/O` y paquetes por segundo
+- `HTTP Flood`: aumento de CPU web, latencia HTTP y throughput
+- `SQLi DoS`: aumento en consultas y conexiones MySQL
 
-Se confirmo la provision automatica de:
+## Resultado de esta revision
 
-- `Infraestructura General`
-- `Servidor Web`
-- `Base de Datos`
-- `Red y Ataques`
-- `Academico Explicativo`
-- `Logs del Laboratorio`
+Durante esta fase de simplificacion se dejaron alineados:
 
-### Evidencias tecnicas observadas
+- panel backend
+- panel frontend
+- scripts Linux
+- scripts Windows
+- dashboards de Grafana
+- validaciones automaticas
+- documentacion tecnica
 
-- `tcp_syncookies` dentro de `servidor_web` = `0`
-- `attack_active` en cero despues de detener ataques
-- `HTTP Flood` produjo aproximadamente `119.24 req/s` en `rate(apache_accesses_total[30s])`
-- `SQLi DoS` produjo aproximadamente `3.8577 q/s` en `rate(mysql_global_status_questions[30s])`
-- `UDP Flood` genero un delta de `345768` paquetes TX en `atacante` durante una ventana controlada de 10 s
-- `SYN Flood` genero un delta de `133264` paquetes TX en `atacante` durante una ventana controlada de 10 s
-- `ACK Flood` genero un delta de `180939` paquetes TX en `atacante` durante una ventana controlada de 10 s
-- `Conntrack Killer` genero un delta de `160101` paquetes TX en `atacante` durante una ventana controlada de 10 s
-
-## Scripts comprobados
-
-### Windows
-
-- `scripts/windows/validate.ps1`
-- `scripts/windows/metrics.ps1`
-- `scripts/windows/attack.ps1`
-- `scripts/windows/stop_attacks.ps1`
-- `scripts/windows/generate_legitimate_traffic.ps1`
-- `scripts/windows/logs.ps1`
-
-### Linux
-
-- Validacion funcional: `scripts/linux/validate.sh`
-- Validacion sintactica: `bash -n` sobre los scripts de `scripts/linux`
-
-## Limitaciones pendientes
-
-- La demostracion de degradacion severa puede variar segun la capacidad del host.
-- En Docker Desktop / WSL, algunos contadores de red dependen del exporter complementario propio para verse con claridad.
-- No se generaron capturas visuales porque no se modificaron las interfaces de frontend.
+Si el daemon de Docker no esta disponible en el host al momento de la revision, la revalidacion operativa debe repetirse una vez vuelva a estar levantado Docker Desktop o Docker Engine.

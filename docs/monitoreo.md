@@ -1,104 +1,136 @@
 # Monitoreo y observabilidad
 
-## Meta
+## Objetivo final
 
-Hacer visible el impacto de los ataques sobre contenedores, servicios web, base de datos, red y logs, sin alterar la topologia base del laboratorio.
+El monitoreo quedo simplificado para la presentacion final. Se mantiene la misma infraestructura de observabilidad, pero Grafana publica solo los paneles realmente necesarios para demostrar de forma clara el efecto de los cuatro ataques finales:
 
-## Stack implementado
+- `SYN Flood`
+- `UDP Flood`
+- `HTTP Flood`
+- `SQLi DoS`
 
-| Componente | Uso | Motivo tecnico |
+## Pipeline completo de observabilidad
+
+### Prometheus
+
+`Prometheus` es el recolector central. Hace scraping periodico de exporters y endpoints `/metrics`, guarda series temporales y resuelve las consultas `PromQL` que luego usa Grafana.
+
+### Grafana
+
+`Grafana` es la capa de visualizacion. No recolecta datos por si mismo. Consulta dos datasources provisionados:
+
+- `Prometheus` para metricas
+- `Loki` para logs
+
+### Loki
+
+`Loki` almacena logs estructurados del laboratorio. Permite correlacionar eventos del panel, del web y de MySQL durante las pruebas.
+
+### Promtail
+
+`Promtail` lee los logs de contenedores Docker, agrega etiquetas y los envia a `Loki`.
+
+## Exporters e integraciones activas
+
+| Componente | Que extrae | Desde donde | Como llega a Grafana |
+|---|---|---|---|
+| `blackbox_exporter` | disponibilidad HTTP/TCP y latencia | probes activos contra `EmpresaX` y MySQL | Prometheus scrapea el exporter y Grafana consulta Prometheus |
+| `apache_exporter` | `apache_up`, accesos, workers, scoreboard | `mod_status` del contenedor web | Prometheus scrapea el exporter y Grafana consulta Prometheus |
+| `mysqld_exporter` | `mysql_up`, conexiones, ritmo de consultas y estado del motor | servidor MySQL | Prometheus scrapea el exporter y Grafana consulta Prometheus |
+| `docker_metrics_exporter` | CPU, memoria, red, uptime, estado y `SYN_RECV` por contenedor | API Docker y `ss -tan state syn-recv` dentro del web | Prometheus scrapea el exporter y Grafana consulta Prometheus |
+| `cadvisor` | metricas complementarias de runtime Docker | engine Docker | Prometheus scrapea cAdvisor y Grafana puede consultarlo via Prometheus |
+| `panel_control` | `attack_active`, `attack_launch_total`, timestamps | backend Flask del panel | Prometheus scrapea el panel y Grafana consulta Prometheus |
+| `promtail` | logs etiquetados | stdout/stderr de contenedores | Promtail envia a Loki y Grafana consulta Loki |
+
+## Dashboards finales publicados
+
+### Red y Ataques
+
+Datasource: `Prometheus`
+
+Paneles finales:
+
+- `Ataques Activos`
+- `Estado por Ataque`
+- `Paquetes por Segundo`
+- `NET I/O del Atacante hacia la DMZ`
+
+Explica principalmente:
+
+- `SYN Flood`
+- `UDP Flood`
+
+### Servidor Web
+
+Datasource: `Prometheus`
+
+Paneles finales:
+
+- `CPU del Contenedor Web`
+- `Latencia HTTP`
+- `Throughput HTTP`
+- `Conexiones SYN_RECV en el Web`
+
+La metrica `SYN_RECV` viene de `docker_metrics_exporter` y se obtiene ejecutando `ss -tan state syn-recv` dentro del contenedor `servidor_web`. Es una metrica real y directa para evidenciar presion sobre conexiones TCP durante `SYN Flood`.
+
+### Base de Datos
+
+Datasource: `Prometheus`
+
+Paneles finales:
+
+- `MySQL Disponible`
+- `Conexiones MySQL`
+- `Ritmo de Consultas`
+
+Explica principalmente `SQLi DoS`.
+
+### Logs del Laboratorio
+
+Datasource: `Loki`
+
+Paneles finales:
+
+- guia de correlacion
+- logs del web
+- logs de MySQL
+- logs del panel
+
+## Metricas clave para la exposicion final
+
+| Ataque | Metrica clave | Motivo |
 |---|---|---|
-| Grafana | Visualizacion | Presentacion academica y correlacion temporal |
-| Prometheus | Recoleccion | Consultas PromQL y scraping continuo |
-| cAdvisor | Contenedores | Base de metricas de runtime Docker |
-| docker_metrics_exporter | Complemento propio | Mejor fidelidad por contenedor en Docker Desktop / WSL |
-| Blackbox Exporter | Probes | Latencia HTTP y disponibilidad TCP |
-| apache_exporter | Web | `mod_status`, workers, accesos |
-| mysqld_exporter | MySQL | Estado y actividad del motor |
-| Loki | Logs | Consulta centralizada de eventos |
-| Promtail | Recoleccion de logs | Envio de logs de contenedores hacia Loki |
+| `SYN Flood` | paquetes por segundo + `lab_container_tcp_syn_recv_connections` | muestra presion de red y acumulacion de conexiones TCP pendientes |
+| `UDP Flood` | paquetes por segundo + `NET I/O` | muestra saturacion de trafico y ancho de banda |
+| `HTTP Flood` | CPU web + latencia HTTP + throughput | muestra saturacion del procesamiento HTTP |
+| `SQLi DoS` | `mysql_global_status_questions` + `mysql_global_status_threads_connected` | muestra impacto directo sobre el motor MySQL |
 
-## Datasources provisionados
+## Metricas relevantes que siguen activas
 
-- `Prometheus`
-- `Loki`
-
-Grafana se provisiona automaticamente desde:
-
-- `monitoring/grafana/provisioning/datasources/datasources.yml`
-- `monitoring/grafana/provisioning/dashboards/dashboards.yml`
-
-## Dashboards provisionados
-
-| Dashboard | UID | Enfoque |
-|---|---|---|
-| Infraestructura General | `infra-general` | CPU, memoria, estado y red por contenedor |
-| Servidor Web | `servidor-web` | disponibilidad, latencia, workers y accesos |
-| Base de Datos | `base-datos` | salud, conexiones y consultas |
-| Red y Ataques | `red-ataques` | trafico, eventos del panel y correlacion de ataques |
-| Academico Explicativo | `academico-explicativo` | capa OSI, TCP/IP, objetivo y sintoma observable |
-| Logs del Laboratorio | `logs-laboratorio` | eventos y logs correlacionados |
-
-## Metricas relevantes
-
-### Contenedores
-
-- `lab_container_up`
+- `attack_active`
+- `attack_launch_total`
 - `lab_container_cpu_percent`
-- `lab_container_memory_usage_bytes`
-- `lab_container_memory_limit_bytes`
 - `lab_container_network_rx_bytes_total`
 - `lab_container_network_tx_bytes_total`
 - `lab_container_network_rx_packets_total`
 - `lab_container_network_tx_packets_total`
-- `lab_container_network_rx_errors_total`
-- `lab_container_network_tx_errors_total`
-- `lab_container_network_rx_dropped_total`
-- `lab_container_network_tx_dropped_total`
-- `lab_container_uptime_seconds`
-
-### Web
-
+- `lab_container_tcp_syn_recv_connections`
 - `probe_success`
 - `probe_duration_seconds`
-- `apache_up`
 - `apache_accesses_total`
-- `apache_workers`
-- `apache_scoreboard`
-
-### Base de datos
-
 - `mysql_up`
 - `mysql_global_status_questions`
 - `mysql_global_status_threads_connected`
-- `mysql_global_status_aborted_connects`
-- `mysql_global_status_bytes_received`
-- `mysql_global_status_bytes_sent`
 
-### Panel y ataques
+## Lo que ya no se publica
 
-- `attack_launch_total`
-- `attack_active`
-- `attack_last_start_timestamp_seconds`
-- `attack_last_stop_timestamp_seconds`
+Grafana ya no publica:
 
-## Logs
+- `Infraestructura General`
+- `Academico Explicativo`
 
-Promtail recoge logs de contenedores Docker y los envia a Loki. En Grafana se pueden filtrar por etiquetas como:
+Esos dashboards se retiraron para reducir ruido visual. No se eliminaron exporters utiles ni la capacidad tecnica de observacion del proyecto final.
 
-- `compose_service`
-- `service_name`
-- `container`
-- `stream`
+## Decision tecnica importante
 
-Esto permite correlacionar el lanzamiento y el stop de ataques con el comportamiento del web, la DB y el panel.
-
-## Limitacion conocida y decision adoptada
-
-`cAdvisor` se mantuvo porque aporta valor real, pero en Docker Desktop / WSL no siempre refleja con suficiente detalle algunos contadores de red por contenedor. Para no cambiar el laboratorio y aun asi poder demostrar el impacto de los floods, se agrego `docker_metrics_exporter`, que consulta Docker y los contadores de interfaz internos del contenedor.
-
-## Lo que no se agrego y por que
-
-- No se agrego `node_exporter`.
-- Motivo: el foco del laboratorio es la red simulada y los contenedores del escenario, no el host del estudiante.
-- Esto reduce ruido y mantiene la demo alineada con el objetivo academico.
+No se elimino `cAdvisor`, `Prometheus`, `Grafana`, `Loki`, `Promtail` ni los exporters utiles. La simplificacion fue visual y funcional, no arquitectonica. El pipeline sigue siendo completo, pero mas facil de explicar.

@@ -1,8 +1,8 @@
-# Arquitectura del laboratorio
+# Arquitectura del proyecto final
 
 ## Objetivo
 
-Describir la topologia academica del laboratorio y dejar claro que la observabilidad se agrego como capa complementaria, no como reemplazo del diseno original.
+Describir la topologia del proyecto final y dejar claro que la observabilidad se agrego como capa complementaria, no como reemplazo del diseno original.
 
 ## Redes
 
@@ -43,7 +43,7 @@ Describir la topologia academica del laboratorio y dejar claro que la observabil
 
 1. El host entra a `EmpresaX` por `localhost:8080`.
 2. `servidor_web` consulta a `base_datos` por la red privada a traves del router virtual.
-3. `panel_control` ordena los ataques sobre el web desde la red de ataque.
+3. `panel_control` ordena los cuatro ataques finales sobre el web o la base de datos desde la red de ataque.
 4. `monitor` conserva la capacidad academica de ver las tres redes.
 5. `Prometheus` y `Grafana` observan el laboratorio desde `red_monitoreo`.
 
@@ -55,4 +55,4 @@ Describir la topologia academica del laboratorio y dejar claro que la observabil
 
 ## Decision arquitectonica clave
 
-La unica extension estructural fue `red_monitoreo`. Todo lo demas conserva el mismo sentido academico del proyecto: una empresa simulada con servicios segmentados, un atacante aislado, un router virtual y un monitor transversal.
+La unica extension estructural fue `red_monitoreo`. Todo lo demas conserva el mismo sentido del proyecto final: una empresa simulada con servicios segmentados, un atacante aislado, un router virtual y un monitor transversal.

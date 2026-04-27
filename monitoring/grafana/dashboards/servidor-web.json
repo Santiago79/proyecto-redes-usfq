@@ -15,115 +15,40 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
+          "unit": "percent"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 6,
+        "h": 8,
+        "w": 12,
         "x": 0,
         "y": 0
       },
       "id": 1,
       "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
         },
-        "textMode": "auto"
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
       },
       "targets": [
         {
           "editorMode": "code",
-          "expr": "probe_success{job=\"blackbox_http\",instance=\"http://172.20.10.10/\"}",
-          "legendFormat": "",
+          "expr": "lab_container_cpu_percent{service=\"web\"}",
+          "legendFormat": "CPU Web",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Disponibilidad HTTP",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "center",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "apache_up",
-          "legendFormat": "",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Apache Exporter OK",
-      "type": "stat"
+      "title": "CPU del Contenedor Web",
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -142,10 +67,10 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 0,
-        "y": 4
+        "x": 12,
+        "y": 0
       },
-      "id": 3,
+      "id": 2,
       "options": {
         "legend": {
           "displayMode": "list",
@@ -165,7 +90,7 @@
           "refId": "A"
         }
       ],
-      "title": "Latencia del Sitio EmpresaX",
+      "title": "Latencia HTTP",
       "type": "timeseries"
     },
     {
@@ -185,10 +110,10 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 4
+        "x": 0,
+        "y": 8
       },
-      "id": 4,
+      "id": 3,
       "options": {
         "legend": {
           "displayMode": "list",
@@ -221,56 +146,7 @@
           "color": {
             "mode": "palette-classic"
           },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 12
-      },
-      "id": 5,
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "rate(apache_sent_kilobytes_total[1m]) * 1024",
-          "legendFormat": "Bytes enviados",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "editorMode": "code",
-          "expr": "rate(lab_container_network_tx_bytes_total{service=\"atacante\"}[30s])",
-          "legendFormat": "Atacante TX",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "Caudal Web vs Trafico del Atacante",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          }
+          "unit": "short"
         },
         "overrides": []
       },
@@ -278,93 +154,29 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 8
       },
-      "id": 6,
+      "id": 4,
       "options": {
         "legend": {
           "displayMode": "list",
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "multi",
+          "mode": "single",
           "sort": "none"
         }
       },
       "targets": [
         {
           "editorMode": "code",
-          "expr": "apache_workers{state=~\"busy|idle\"}",
-          "legendFormat": "{{state}}",
+          "expr": "lab_container_tcp_syn_recv_connections{service=\"web\"}",
+          "legendFormat": "SYN_RECV",
           "range": true,
           "refId": "A"
-        },
-        {
-          "editorMode": "code",
-          "expr": "apache_scoreboard{state=~\"reply|read|keepalive|open_slot\"}",
-          "legendFormat": "scoreboard {{state}}",
-          "range": true,
-          "refId": "B"
         }
       ],
-      "title": "Workers y Scoreboard Apache",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 24,
-        "x": 0,
-        "y": 20
-      },
-      "id": 7,
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "lab_container_cpu_percent{service=\"web\"}",
-          "legendFormat": "CPU Web",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "editorMode": "code",
-          "expr": "rate(lab_container_network_rx_packets_total{service=\"web\"}[30s])",
-          "legendFormat": "Paquetes RX Web",
-          "range": true,
-          "refId": "B"
-        },
-        {
-          "editorMode": "code",
-          "expr": "rate(lab_container_network_tx_packets_total{service=\"atacante\"}[30s])",
-          "legendFormat": "Paquetes TX Atacante",
-          "range": true,
-          "refId": "C"
-        }
-      ],
-      "title": "Impacto de SYN/HTTP Flood sobre el Web",
+      "title": "Conexiones SYN_RECV en el Web",
       "type": "timeseries"
     }
   ],
@@ -373,7 +185,8 @@
   "style": "dark",
   "tags": [
     "web",
-    "apache"
+    "apache",
+    "final"
   ],
   "templating": {
     "list": []
@@ -386,6 +199,6 @@
   "timezone": "browser",
   "title": "Servidor Web",
   "uid": "servidor-web",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

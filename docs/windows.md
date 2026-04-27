@@ -40,11 +40,16 @@ Salida por defecto:
 ```powershell
 scripts\windows\attack.ps1 -Attack udp
 scripts\windows\attack.ps1 -Attack syn
-scripts\windows\attack.ps1 -Attack ack
-scripts\windows\attack.ps1 -Attack conntrack
 scripts\windows\attack.ps1 -Attack http
 scripts\windows\attack.ps1 -Attack sqli_dos
 ```
+
+Ataques finales permitidos:
+
+- `udp`
+- `syn`
+- `http`
+- `sqli_dos`
 
 Tambien existe el wrapper:
 
@@ -83,6 +88,6 @@ scripts\windows\metrics.ps1
 ## Troubleshooting rapido
 
 - Si Docker Desktop no esta iniciado, los scripts fallaran al consultar contenedores o endpoints.
-- Si Grafana no muestra paneles, ejecuta `scripts\windows\validate.ps1` y revisa los logs de `grafana`, `prometheus` y `docker_metrics_exporter`.
+- Si Grafana no muestra los cuatro dashboards finales, ejecuta `scripts\windows\validate.ps1` y revisa los logs de `grafana`, `prometheus` y `docker_metrics_exporter`.
 - Si una prueba deja trafico activo, ejecuta `scripts\windows\stop_attacks.ps1`.
 - Si quieres volver al estado limpio inicial, ejecuta `scripts\windows\reset_lab.ps1`.

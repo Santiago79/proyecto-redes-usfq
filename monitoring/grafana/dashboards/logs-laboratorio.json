@@ -16,7 +16,7 @@
       },
       "id": 1,
       "options": {
-        "content": "Este dashboard correlaciona logs de servicios clave con los ataques del panel. Usa las marcas de tiempo junto con `Red y Ataques` y `Servidor Web` para explicar degradacion, errores y recuperacion.",
+        "content": "Este dashboard correlaciona logs del web, MySQL y el panel con los cuatro ataques finales del proyecto: SYN Flood, UDP Flood, HTTP Flood y SQLi DoS. Para explicar el impacto, acompáñalo con `Red y Ataques`, `Servidor Web` y `Base de Datos`.",
         "mode": "markdown"
       },
       "title": "Guia de Correlacion",
@@ -121,7 +121,8 @@
   "style": "dark",
   "tags": [
     "logs",
-    "loki"
+    "loki",
+    "final"
   ],
   "templating": {
     "list": []
@@ -134,6 +135,6 @@
   "timezone": "browser",
   "title": "Logs del Laboratorio",
   "uid": "logs-laboratorio",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }
