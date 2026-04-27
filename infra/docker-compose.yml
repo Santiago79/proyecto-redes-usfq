@@ -68,16 +68,21 @@ services:
       context: .
       dockerfile: web.Dockerfile
     container_name: servidor_web
+
     depends_on:
       db:
         condition: service_healthy
+
     networks:
       red_publica:
         ipv4_address: 172.20.10.10
+
     ports:
       - "8080:80"
+
     volumes:
       - ./html:/var/www/html:ro
+
     cap_add:
       - NET_ADMIN
     cpus: 0.05
