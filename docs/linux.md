@@ -134,4 +134,4 @@ bash scripts/scripts_captura_ataques/linux/metrics.sh
 - Si Docker pide privilegios, agrega tu usuario al grupo `docker` o ejecuta con el mecanismo habitual de tu distribucion.
 - Si `Grafana` no muestra los cuatro dashboards finales, reejecuta `bash scripts/scripts_captura_ataques/linux/validate.sh` y revisa `docker compose -f infra/docker-compose.yml logs grafana prometheus`.
 - Si un ataque queda activo, usa `bash scripts/scripts_captura_ataques/linux/stop_attacks.sh`.
-- Si quieres validar una captura, abre el archivo `.pcapng` generado en `analisis/pcaps` con Wireshark en el host.
+- Si quieres validar una captura, abre el archivo `.pcap` o `.pcapng` generado en `analisis/pcaps` con Wireshark en el host.

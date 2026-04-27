@@ -203,10 +203,10 @@ scripts\scripts_captura_ataques\windows\stop_attacks.ps1
 
 ## Documentacion principal
 
-- [README2_MONITOREO_CAMBIOS.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/README2_MONITOREO_CAMBIOS.md>)
-- [docs/arquitectura.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/arquitectura.md>)
-- [docs/monitoreo.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/monitoreo.md>)
-- [docs/capturas_wireshark.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/capturas_wireshark.md>)
-- [docs/linux.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/linux.md>)
-- [docs/windows.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/windows.md>)
-- [docs/pruebas.md](<C:/Users/jgome/OneDrive/Escritorio/Redes/Proyecto_Redes/proyecto-redes-usfq/docs/pruebas.md>)
+- [README2_MONITOREO_CAMBIOS.md](README2_MONITOREO_CAMBIOS.md)
+- [docs/arquitectura.md](docs/arquitectura.md)
+- [docs/monitoreo.md](docs/monitoreo.md)
+- [docs/capturas_wireshark.md](docs/capturas_wireshark.md)
+- [docs/linux.md](docs/linux.md)
+- [docs/windows.md](docs/windows.md)
+- [docs/pruebas.md](docs/pruebas.md)
