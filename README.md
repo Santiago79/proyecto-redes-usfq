@@ -16,7 +16,7 @@ Proyecto final de redes orientado a demostrar, medir y explicar el impacto de at
   - `Red y Ataques`
   - `Servidor Web`
   - `Base de Datos`
-  - `Logs del Laboratorio`
+  - `Logs del Proyecto`
 
 La simplificacion final redujo ataques y dashboards para hacer la presentacion mas clara, pero no modifico la infraestructura base ni la topologia logica del proyecto.
 
@@ -40,7 +40,7 @@ graph TD
             end
 
             subgraph "Router Virtual"
-                ROUTER["router<br/>eth0: 172.20.10.254<br/>eth1: 172.20.20.254<br/>eth2: 172.20.30.254"]
+                ROUTER["router<br/>eth0: 172.20.10.254<br/>eth1: 172.20.20.254<br/>eth2: 172.20.30.254<br/>eth3: 172.20.40.254"]
             end
 
             subgraph "Monitor Multi-Interfaz"
@@ -58,6 +58,7 @@ graph TD
     ATTACKER --- ROUTER
     PANEL --- ROUTER
     MONITOR --- ROUTER
+    OBS --- ROUTER
 
     ATTACKER -.->|"SYN Flood / UDP Flood / HTTP Flood"| WEB
     ATTACKER -.->|"SQLi DoS (via HTTP hacia login vulnerable)"| WEB
@@ -91,7 +92,9 @@ graph TD
 
 - Aloja la capa de observabilidad.
 - No reemplaza la topologia original; la complementa.
-- Desde aqui `Prometheus` scrapea metricas y `Grafana` consulta `Prometheus` y `Loki`.
+- `Prometheus`, `Grafana`, `Loki` y los exporters comparten esta red para intercambiar metricas y logs.
+- El `router` tambien esta conectado a esta subred con `172.20.40.254`, lo que vuelve mas coherente la topologia final sin alterar el flujo principal del proyecto.
+- Importante: el monitoreo funciona porque los exporters tienen conectividad directa con las redes objetivo y con `red_monitoreo`; no depende de que todo el scrape pase enrutado por el `router`.
 
 ## Ataques finales y objetivo tecnico
 
@@ -105,9 +108,9 @@ graph TD
 ## Monitoreo final
 
 - `Red y Ataques`: resume ataques activos, paquetes por segundo y `NET I/O`.
-- `Servidor Web`: muestra CPU, latencia HTTP, throughput y conexiones `SYN_RECV`.
+- `Servidor Web`: muestra CPU, porcentaje de RAM, latencia HTTP, throughput y conexiones `SYN_RECV`.
 - `Base de Datos`: muestra disponibilidad MySQL, conexiones y consultas.
-- `Logs del Laboratorio`: correlaciona logs del web, MySQL y panel.
+- `Logs del Proyecto`: correlaciona logs del web y del panel.
 
 ## Capturas para Wireshark
 

@@ -41,7 +41,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "lab_container_cpu_percent{service=\"web\"}",
+          "expr": "max_over_time(lab_container_cpu_percent{service=\"web\"}[8s])",
           "legendFormat": "CPU Web",
           "range": true,
           "refId": "A"
@@ -178,9 +178,52 @@
       ],
       "title": "Conexiones SYN_RECV en el Web",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 16
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "100 * lab_container_memory_usage_bytes{service=\"web\"} / clamp_min(lab_container_memory_limit_bytes{service=\"web\"}, 1)",
+          "legendFormat": "RAM Web",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Uso de RAM del Contenedor Web",
+      "type": "timeseries"
     }
   ],
-  "refresh": "5s",
+  "refresh": "2s",
   "schemaVersion": 39,
   "style": "dark",
   "tags": [
@@ -199,6 +242,6 @@
   "timezone": "browser",
   "title": "Servidor Web",
   "uid": "servidor-web",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }

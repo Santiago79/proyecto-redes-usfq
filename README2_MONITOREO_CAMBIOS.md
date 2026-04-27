@@ -16,7 +16,7 @@ Y conserva cuatro dashboards enfocados:
 - `Red y Ataques`
 - `Servidor Web`
 - `Base de Datos`
-- `Logs del Laboratorio`
+- `Logs del Proyecto`
 
 ## 2. Que se simplifico
 
@@ -66,6 +66,7 @@ Redes conservadas:
 La topologia final sigue usando:
 
 - `router` para conectar los segmentos del escenario
+- `router` tambien conectado a `red_monitoreo` con `172.20.40.254`
 - `servidor_web` en la DMZ
 - `base_datos` en la red privada
 - `atacante` y `panel_control` en la red de ataque
@@ -78,7 +79,7 @@ No hubo cambios de puertos, redes logicas, roles de contenedores ni flujo princi
 
 ### Servicios principales
 
-- `router`: conecta la red publica, privada y de ataque.
+- `router`: conecta la red publica, privada y de ataque; adicionalmente queda presente en `red_monitoreo` para dar coherencia topologica al plano de observabilidad sin redisenar el proyecto.
 - `servidor_web`: publica `EmpresaX`, recibe trafico legitimo y es objetivo principal de `SYN Flood`, `UDP Flood` y `HTTP Flood`.
 - `base_datos`: almacena credenciales y consultas del sitio; es objetivo principal de `SQLi DoS`.
 - `atacante`: ejecuta los scripts de los cuatro ataques finales.
@@ -122,6 +123,15 @@ Ya no aparecen en el panel, scripts, validaciones, dashboards ni documentacion a
 
 `Prometheus` es el colector central. Consulta periodicamente endpoints `/metrics` o exporters dedicados. Guarda series temporales y permite consultas `PromQL`.
 
+Punto importante de arquitectura: `Prometheus` no necesita cruzar el `router` para recolectar datos. La recoleccion funciona porque varios exporters son multi-homed y estan conectados tanto a `red_monitoreo` como a la red donde vive el servicio observado. Ejemplos:
+
+- `apache_exporter` -> `red_publica` + `red_monitoreo`
+- `mysqld_exporter` -> `red_privada` + `red_monitoreo`
+- `blackbox_exporter` -> `red_publica` + `red_privada` + `red_monitoreo`
+- `panel_control` -> `red_ataque` + `red_monitoreo`
+
+Por eso la capa de monitoreo ya podia operar incluso antes de conectar el `router` a `red_monitoreo`. La conexion adicional del `router` mejora la lectura conceptual de la topologia, pero no cambia el mecanismo base del scrape.
+
 Fuentes relevantes:
 
 - `panel_control`: expone `attack_active`, `attack_launch_total` y timestamps de inicio y stop.
@@ -144,7 +154,7 @@ Dashboards finales:
 - `Red y Ataques`
 - `Servidor Web`
 - `Base de Datos`
-- `Logs del Laboratorio`
+- `Logs del Proyecto`
 
 ### 8.3 Loki
 
@@ -248,6 +258,7 @@ Datasource: `Prometheus`
 Paneles:
 
 - `CPU del Contenedor Web`
+- `Uso de RAM del Contenedor Web`
 - `Latencia HTTP`
 - `Throughput HTTP`
 - `Conexiones SYN_RECV en el Web`
@@ -271,7 +282,7 @@ Uso principal:
 
 - `SQLi DoS`
 
-### Logs del Laboratorio
+### Logs del Proyecto
 
 Datasource: `Loki`
 
@@ -279,7 +290,6 @@ Paneles:
 
 - guia de correlacion
 - logs web
-- logs MySQL
 - logs del panel
 
 ## 10. Archivos afectados en esta simplificacion
@@ -363,7 +373,7 @@ Lo que debe confirmarse en la validacion final:
 - solo existen cuatro ataques
 - el panel ya no muestra `ACK Flood` ni `Conntrack Killer`
 - Grafana solo publica cuatro dashboards
-- `Logs del Laboratorio` sigue funcionando
+- `Logs del Proyecto` sigue funcionando
 - Prometheus, Grafana y Loki siguen activos
 - la topologia no cambia
 - la metrica `lab_container_tcp_syn_recv_connections` queda disponible para `SYN Flood`

@@ -5,7 +5,7 @@
 Validar que la simplificacion final no rompe el proyecto y deja solo:
 
 - 4 ataques: `SYN Flood`, `UDP Flood`, `HTTP Flood`, `SQLi DoS`
-- 4 dashboards: `Red y Ataques`, `Servidor Web`, `Base de Datos`, `Logs del Laboratorio`
+- 4 dashboards: `Red y Ataques`, `Servidor Web`, `Base de Datos`, `Logs del Proyecto`
 
 ## Comandos de validacion previstos
 

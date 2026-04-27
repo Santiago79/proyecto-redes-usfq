@@ -11,13 +11,13 @@ Describir la topologia del proyecto final y dejar claro que la observabilidad se
 | `red_publica` | `172.20.10.0/24` | DMZ y exposicion del servidor web | Conservada |
 | `red_privada` | `172.20.20.0/24` | Backend y base de datos | Conservada |
 | `red_ataque` | `172.20.30.0/24` | Segmento del atacante y panel | Conservada |
-| `red_monitoreo` | `172.20.40.0/24` | Observabilidad, Prometheus, Grafana, Loki y exporters | Nueva, complementaria |
+| `red_monitoreo` | `172.20.40.0/24` | Observabilidad, Prometheus, Grafana, Loki y exporters | Complementaria y conectada tambien al router |
 
 ## Contenedores principales
 
 | Servicio | Contenedor | Red(es) | IP fija | Puerto host | Rol |
 |---|---|---|---|---|---|
-| Router | `router` | publica, privada, ataque | `.10.254`, `.20.254`, `.30.254` | No expone | Enrutamiento |
+| Router | `router` | publica, privada, ataque, monitoreo | `.10.254`, `.20.254`, `.30.254`, `.40.254` | No expone | Enrutamiento y punto coherente de borde del laboratorio |
 | Web | `servidor_web` | publica | `172.20.10.10` | `8080:80` | EmpresaX + login vulnerable |
 | Base de datos | `base_datos` | privada | `172.20.20.10` | No expone | MySQL |
 | Atacante | `atacante` | ataque | `172.20.30.10` | No expone | `hping3` y `curl` de ataque |
@@ -44,9 +44,10 @@ Describir la topologia del proyecto final y dejar claro que la observabilidad se
 1. El host entra a `EmpresaX` por `localhost:8080`.
 2. `servidor_web` consulta a `base_datos` por la red privada a traves del router virtual.
 3. `panel_control` ordena los cuatro ataques finales sobre el web o la base de datos desde la red de ataque.
-4. `monitor` conserva la capacidad academica de ver las tres redes y coordina la observacion del escenario.
+4. `monitor` conserva la capacidad academica de ver las tres redes operativas del escenario y coordina la observacion.
 5. `router` puede generar capturas persistentes en `analisis/pcaps`, porque es el punto de paso real entre subredes.
 6. `Prometheus` y `Grafana` observan el laboratorio desde `red_monitoreo`.
+7. Los exporters multi-homed enlazan `red_monitoreo` con las redes objetivo, por eso el monitoreo funciona por conectividad directa y no porque todo el scrape atraviese el router.
 
 ## Conservacion de interfaces
 
@@ -56,4 +57,4 @@ Describir la topologia del proyecto final y dejar claro que la observabilidad se
 
 ## Decision arquitectonica clave
 
-La unica extension estructural fue `red_monitoreo`. Todo lo demas conserva el mismo sentido del proyecto final: una empresa simulada con servicios segmentados, un atacante aislado, un router virtual y un monitor transversal.
+La unica extension estructural fue `red_monitoreo`. El `router` ahora tambien esta conectado a esa subred para que el plano de monitoreo tenga un borde mas coherente dentro de la misma topologia. Aun asi, el mecanismo real de observabilidad sigue descansando en exporters conectados tanto a la red monitoreada como a `red_monitoreo`. Todo lo demas conserva el mismo sentido del proyecto final: una empresa simulada con servicios segmentados, un atacante aislado, un router virtual y un monitor transversal.

@@ -15,6 +15,15 @@ El monitoreo quedo simplificado para la presentacion final. Se mantiene la misma
 
 `Prometheus` es el recolector central. Hace scraping periodico de exporters y endpoints `/metrics`, guarda series temporales y resuelve las consultas `PromQL` que luego usa Grafana.
 
+La capa de monitoreo no necesita enrutar cada scrape a traves del `router`. Funciona porque los exporters utiles son multi-homed: comparten `red_monitoreo` con `Prometheus` y al mismo tiempo estan presentes en la red donde vive el servicio observado. Por eso `Prometheus` puede consultar directamente:
+
+- `apache_exporter` para el web en `red_publica`
+- `mysqld_exporter` para MySQL en `red_privada`
+- `blackbox_exporter` para probes HTTP/TCP
+- `panel_control` para eventos de ataques
+
+Como ajuste final de coherencia topologica, el `router` tambien fue conectado a `red_monitoreo` con `172.20.40.254`, pero eso complementa el diseno; no sustituye el modelo de exporters multi-homed.
+
 ### Grafana
 
 `Grafana` es la capa de visualizacion. No recolecta datos por si mismo. Consulta dos datasources provisionados:
@@ -76,6 +85,7 @@ Datasource: `Prometheus`
 Paneles finales:
 
 - `CPU del Contenedor Web`
+- `Uso de RAM del Contenedor Web`
 - `Latencia HTTP`
 - `Throughput HTTP`
 - `Conexiones SYN_RECV en el Web`
@@ -94,7 +104,7 @@ Paneles finales:
 
 Explica principalmente `SQLi DoS`.
 
-### Logs del Laboratorio
+### Logs del Proyecto
 
 Datasource: `Loki`
 
@@ -102,7 +112,6 @@ Paneles finales:
 
 - guia de correlacion
 - logs del web
-- logs de MySQL
 - logs del panel
 
 ## Metricas clave para la exposicion final
