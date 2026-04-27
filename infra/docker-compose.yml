@@ -14,6 +14,8 @@ services:
         ipv4_address: 172.20.20.254
       red_ataque:
         ipv4_address: 172.20.30.254
+      red_monitoreo:
+        ipv4_address: 172.20.40.254
     cap_add:
       - NET_ADMIN
       - NET_RAW
@@ -212,7 +214,7 @@ services:
     environment:
       COMPOSE_PROJECT: infra
       SCRAPE_PACKET_STATS: "true"
-      REFRESH_INTERVAL_SECONDS: "5"
+      REFRESH_INTERVAL_SECONDS: "2"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:

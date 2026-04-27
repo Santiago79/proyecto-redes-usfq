@@ -35,7 +35,7 @@ function Targets-Up {
 
 function Dashboards-Ready {
     $response = (& curl.exe -s -u "admin:admin" "$Script:GrafanaUrl/api/search?query=") | ConvertFrom-Json
-    $titles = "Servidor Web", "Base de Datos", "Red y Ataques", "Logs del Laboratorio"
+    $titles = "Servidor Web", "Base de Datos", "Red y Ataques", "Logs del Proyecto"
     foreach ($title in $titles) {
         if (-not ($response | Where-Object { $_.title -eq $title })) {
             return $false
@@ -62,7 +62,7 @@ function Dashboards-Simplified {
     return ($titles -contains "Red y Ataques") -and
         ($titles -contains "Servidor Web") -and
         ($titles -contains "Base de Datos") -and
-        ($titles -contains "Logs del Laboratorio") -and
+        ($titles -contains "Logs del Proyecto") -and
         (-not ($titles -contains "Infraestructura General")) -and
         (-not ($titles -contains "Academico Explicativo"))
 }

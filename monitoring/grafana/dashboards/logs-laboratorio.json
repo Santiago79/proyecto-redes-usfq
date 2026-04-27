@@ -16,7 +16,7 @@
       },
       "id": 1,
       "options": {
-        "content": "Este dashboard correlaciona logs del web, MySQL y el panel con los cuatro ataques finales del proyecto: SYN Flood, UDP Flood, HTTP Flood y SQLi DoS. Para explicar el impacto, acompáñalo con `Red y Ataques`, `Servidor Web` y `Base de Datos`.",
+        "content": "Este dashboard correlaciona logs del web y del panel con los cuatro ataques finales del proyecto: SYN Flood, UDP Flood, HTTP Flood y SQLi DoS. Para explicar el impacto, acompáñalo con `Red y Ataques`, `Servidor Web` y `Base de Datos`.",
         "mode": "markdown"
       },
       "title": "Guia de Correlacion",
@@ -60,42 +60,11 @@
       },
       "gridPos": {
         "h": 9,
-        "w": 12,
+        "w": 24,
         "x": 0,
         "y": 13
       },
       "id": 3,
-      "options": {
-        "dedupStrategy": "none",
-        "enableLogDetails": true,
-        "prettifyLogMessage": true,
-        "showCommonLabels": false,
-        "showLabels": true,
-        "sortOrder": "Descending",
-        "wrapLogMessage": true
-      },
-      "targets": [
-        {
-          "expr": "{compose_service=\"db\"}",
-          "queryType": "range",
-          "refId": "A"
-        }
-      ],
-      "title": "Logs MySQL",
-      "type": "logs"
-    },
-    {
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 13
-      },
-      "id": 4,
       "options": {
         "dedupStrategy": "none",
         "enableLogDetails": true,
@@ -116,7 +85,7 @@
       "type": "logs"
     }
   ],
-  "refresh": "5s",
+  "refresh": "2s",
   "schemaVersion": 39,
   "style": "dark",
   "tags": [
@@ -133,8 +102,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Logs del Laboratorio",
+  "title": "Logs del Proyecto",
   "uid": "logs-laboratorio",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }

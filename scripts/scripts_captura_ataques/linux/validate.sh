@@ -75,7 +75,7 @@ targets_up() {
 dashboards_ready() {
   local response
   response="$(curl -fsS -u admin:admin "$GRAFANA_URL/api/search?query=")"
-  for title in "Servidor Web" "Base de Datos" "Red y Ataques" "Logs del Laboratorio"; do
+  for title in "Servidor Web" "Base de Datos" "Red y Ataques" "Logs del Proyecto"; do
     if ! grep -q "\"title\":\"$title\"" <<<"$response"; then
       return 1
     fi
@@ -100,7 +100,7 @@ dashboards_simplified() {
   grep -q '"title":"Red y Ataques"' <<<"$response" &&
     grep -q '"title":"Servidor Web"' <<<"$response" &&
     grep -q '"title":"Base de Datos"' <<<"$response" &&
-    grep -q '"title":"Logs del Laboratorio"' <<<"$response" &&
+    grep -q '"title":"Logs del Proyecto"' <<<"$response" &&
     ! grep -q '"title":"Infraestructura General"' <<<"$response" &&
     ! grep -q '"title":"Academico Explicativo"' <<<"$response"
 }
