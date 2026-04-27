@@ -1,23 +1,21 @@
 #!/bin/sh
+set -eu
 
-echo "Activando IP forward..."
-echo 1 > /proc/sys/net/ipv4/ip_forward
-
-echo "Limpiando iptables..."
-iptables -F
+echo "IP forward habilitado por sysctl del contenedor"
+echo "Reiniciando reglas de forwarding..."
+iptables -F FORWARD
 iptables -t nat -F
-
-echo "Configurando FORWARD..."
 iptables -P FORWARD ACCEPT
 
-iptables -A FORWARD -s 172.20.10.0/24 -d 172.20.20.0/24 -j ACCEPT
-iptables -A FORWARD -s 172.20.20.0/24 -d 172.20.10.0/24 -j ACCEPT
-
-iptables -A FORWARD -s 172.20.30.0/24 -d 172.20.10.0/24 -j ACCEPT
-iptables -A FORWARD -s 172.20.10.0/24 -d 172.20.30.0/24 -j ACCEPT
-
-echo "Configurando NAT..."
-iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+# Mantiene la topologia original con reglas explicitas entre subredes sin
+# introducir NAT adicional ni alterar el flujo academico del laboratorio.
+for src in 172.20.10.0/24 172.20.20.0/24 172.20.30.0/24; do
+  for dst in 172.20.10.0/24 172.20.20.0/24 172.20.30.0/24; do
+    if [ "$src" != "$dst" ]; then
+      iptables -A FORWARD -s "$src" -d "$dst" -j ACCEPT
+    fi
+  done
+done
 
 echo "Router listo"
-tail -f /dev/null
+exec tail -f /dev/null

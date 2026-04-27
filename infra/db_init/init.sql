@@ -10,3 +10,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 
 -- Insertamos al administrador secreto
 INSERT INTO usuarios (user, pass) VALUES ('admin', 'admin123');
+
+CREATE USER IF NOT EXISTS 'exporter'@'%' IDENTIFIED BY 'exporterpass';
+GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'%';
+FLUSH PRIVILEGES;
