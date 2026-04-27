@@ -1,0 +1,30 @@
+﻿Resumen de capturas de 45 segundos
+Fecha UTC: 2026-04-27T06:46:49Z
+Duracion por ataque: 45 segundos
+
+- syn completado
+syn_45s_red_publica_20260427_064653.pcap0
+syn_45s_red_publica_20260427_062230.pcap0
+syn_45s_red_publica_20260427_060914.pcap0
+
+- udp completado
+udp_45s_red_publica_20260427_064752.pcap3
+udp_45s_red_publica_20260427_064752.pcap2
+udp_45s_red_publica_20260427_064752.pcap1
+udp_45s_red_publica_20260427_064752.pcap0
+udp_45s_red_publica_20260427_064752.pcap4
+udp_45s_red_publica_20260427_062330.pcap1
+udp_45s_red_publica_20260427_062330.pcap0
+udp_45s_red_publica_20260427_062330.pcap4
+udp_45s_red_publica_20260427_062330.pcap3
+udp_45s_red_publica_20260427_062330.pcap2
+
+- http completado
+http_45s_red_publica_20260427_064852.pcap0
+http_45s_red_publica_20260427_061114.pcap1
+http_45s_red_publica_20260427_061114.pcap0
+
+- sqli_dos completado
+sqli_45s_red_privada_20260427_064951.pcap0
+sqli_45s_red_privada_20260427_061214.pcap0
+

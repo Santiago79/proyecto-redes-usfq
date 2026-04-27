@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk add --no-cache iptables iproute2 iperf3 bash
+RUN apk add --no-cache iptables iproute2 iperf3 bash tcpdump
 
 COPY router-entrypoint.sh /router-entrypoint.sh
 RUN chmod +x /router-entrypoint.sh

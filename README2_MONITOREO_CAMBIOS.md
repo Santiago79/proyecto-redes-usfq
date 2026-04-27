@@ -97,6 +97,8 @@ No hubo cambios de puertos, redes logicas, roles de contenedores ni flujo princi
 - `mysqld_exporter`: expone metadatos y contadores internos de MySQL.
 - `cadvisor`: aporta metricas de contenedores desde Docker.
 - `docker_metrics_exporter`: exporter propio que consulta Docker y complementa CPU, memoria, red, uptime y `SYN_RECV`.
+- `monitor`: conserva su rol de observacion multi-interfaz y de referencia academica del escenario.
+- `router`: ahora tambien puede generar capturas persistentes para Wireshark, porque el trafico entre subredes cruza realmente por este contenedor.
 
 ## 7. Inventario final de ataques
 
@@ -206,6 +208,21 @@ Esto permite mostrar de forma directa la presion de conexiones durante `SYN Floo
 
 Sigue activo como fuente complementaria de metricas de contenedor. No se elimino porque sigue aportando visibilidad de runtime. Sin embargo, el dashboard final depende principalmente de `docker_metrics_exporter` para las series que interesan en la exposicion.
 
+### 8.10 Capturas Wireshark
+
+Se agrego soporte de capturas persistentes sin cambiar la arquitectura base:
+
+- el contenedor `monitor` conserva su rol y no fue sustituido
+- el contenedor `router` monta `analisis/pcaps` del host como `/captures`
+- se agrego `NET_RAW` de forma explicita a `router` para captura de paquetes
+- los scripts Linux y Windows arrancan y detienen capturas reproducibles
+- la resolucion de interfaz se hace por IP del `router` en cada red
+- las capturas usan ring buffer para evitar archivos gigantes
+- se agregaron automatizaciones para capturar cada ataque durante 45 segundos
+- se agregaron lanzadores por ataque y un lanzador secuencial para los cuatro ataques finales
+
+Motivo tecnico del ajuste: en redes bridge de Docker, un contenedor monitor pasivo no siempre recibe trafico unicast entre otros contenedores. Para no romper la topologia ni agregar contenedores nuevos, la captura se hace en `router`, que ya existe y por donde si transita el trafico entre subredes. Esto no interfiere con Grafana, Prometheus, Loki ni los exporters. Es una capacidad adicional de analisis forense y demostracion.
+
 ## 9. Dashboards finales
 
 ### Red y Ataques
@@ -271,11 +288,11 @@ Paneles:
 
 - `panel/app.py`
 - `panel/templates/index.html`
-- `scripts/linux/common.sh`
-- `scripts/linux/attack.sh`
-- `scripts/linux/validate.sh`
-- `scripts/windows/Common.ps1`
-- `scripts/windows/validate.ps1`
+- `scripts/scripts_captura_ataques/linux/common.sh`
+- `scripts/scripts_captura_ataques/linux/attack.sh`
+- `scripts/scripts_captura_ataques/linux/validate.sh`
+- `scripts/scripts_captura_ataques/windows/Common.ps1`
+- `scripts/scripts_captura_ataques/windows/validate.ps1`
 - `monitoring/docker_metrics_exporter/app.py`
 - `monitoring/grafana/dashboards/red-ataques.json`
 - `monitoring/grafana/dashboards/servidor-web.json`
@@ -304,26 +321,40 @@ Paneles:
 ### Linux
 
 ```bash
-bash scripts/linux/up.sh
-bash scripts/linux/validate.sh
-bash scripts/linux/attack.sh syn
-bash scripts/linux/attack.sh udp
-bash scripts/linux/attack.sh http
-bash scripts/linux/attack.sh sqli_dos
-bash scripts/linux/stop_attacks.sh
+bash scripts/scripts_captura_ataques/linux/up.sh
+bash scripts/scripts_captura_ataques/linux/validate.sh
+bash scripts/scripts_captura_ataques/linux/start_capture.sh red_publica syn
+bash scripts/scripts_captura_ataques/linux/capture_attack.sh syn 45
+bash scripts/scripts_captura_ataques/linux/capture_all_attacks.sh 45
+bash scripts/scripts_captura_ataques/linux/attack.sh syn
+bash scripts/scripts_captura_ataques/linux/attack.sh udp
+bash scripts/scripts_captura_ataques/linux/attack.sh http
+bash scripts/scripts_captura_ataques/linux/attack.sh sqli_dos
+bash scripts/scripts_captura_ataques/linux/stop_capture.sh
+bash scripts/scripts_captura_ataques/linux/stop_attacks.sh
 ```
 
 ### Windows
 
 ```powershell
-scripts\windows\up.ps1
-scripts\windows\validate.ps1
-scripts\windows\attack.ps1 -Attack syn
-scripts\windows\attack.ps1 -Attack udp
-scripts\windows\attack.ps1 -Attack http
-scripts\windows\attack.ps1 -Attack sqli_dos
-scripts\windows\stop_attacks.ps1
+scripts\scripts_captura_ataques\windows\up.ps1
+scripts\scripts_captura_ataques\windows\validate.ps1
+scripts\scripts_captura_ataques\windows\start_capture.ps1 -Mode red_publica -Label syn
+scripts\scripts_captura_ataques\windows\capture_attack.ps1 -Attack syn -DurationSeconds 45
+scripts\scripts_captura_ataques\windows\capture_all_attacks.ps1 -DurationSeconds 45
+scripts\scripts_captura_ataques\windows\capture_all_attacks.bat -DurationSeconds 45
+scripts\scripts_captura_ataques\windows\attack.ps1 -Attack syn
+scripts\scripts_captura_ataques\windows\attack.ps1 -Attack udp
+scripts\scripts_captura_ataques\windows\attack.ps1 -Attack http
+scripts\scripts_captura_ataques\windows\attack.ps1 -Attack sqli_dos
+scripts\scripts_captura_ataques\windows\stop_capture.ps1
+scripts\scripts_captura_ataques\windows\stop_attacks.ps1
 ```
+
+Ubicacion final de capturas y resumen:
+
+- `analisis/pcaps`
+- `analisis/pcaps/capturas_45s_resumen.txt`
 
 ## 12. Validacion y estado final
 
@@ -336,6 +367,7 @@ Lo que debe confirmarse en la validacion final:
 - Prometheus, Grafana y Loki siguen activos
 - la topologia no cambia
 - la metrica `lab_container_tcp_syn_recv_connections` queda disponible para `SYN Flood`
+- el sistema de captura genera archivos `.pcap` o `.pcapng` en `analisis/pcaps`
 
 ## 13. Conclusiones tecnicas
 
@@ -347,4 +379,3 @@ La simplificacion no debilita el proyecto. Lo vuelve mas claro. El escenario sig
 - impacto directo sobre MySQL con `SQLi DoS`
 
 La observabilidad sigue siendo suficiente y correcta porque mantiene metricas de red, servicio web, base de datos y logs, pero ahora con una narrativa de exposicion mucho mas directa.
-

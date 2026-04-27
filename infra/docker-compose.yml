@@ -4,6 +4,9 @@ services:
       context: .
       dockerfile: router.Dockerfile
     container_name: router
+    volumes:
+      - ../scripts:/opt/lab_scripts:ro
+      - ../analisis/pcaps:/captures
     networks:
       red_publica:
         ipv4_address: 172.20.10.254
@@ -13,6 +16,7 @@ services:
         ipv4_address: 172.20.30.254
     cap_add:
       - NET_ADMIN
+      - NET_RAW
     sysctls:
       - net.ipv4.ip_forward=1
     healthcheck:
@@ -76,6 +80,8 @@ services:
       - ./html:/var/www/html:ro
     cap_add:
       - NET_ADMIN
+    cpus: 0.05
+    mem_limit: 64m
     sysctls:
       - net.ipv4.tcp_syncookies=0
     entrypoint: ["/web-entrypoint.sh"]
@@ -128,6 +134,7 @@ services:
         ipv4_address: 172.20.30.50
     cap_add:
       - NET_ADMIN
+      - NET_RAW
     command: ["sleep", "infinity"]
     healthcheck:
       test: ["CMD-SHELL", "which tcpdump >/dev/null && which tshark >/dev/null"]
