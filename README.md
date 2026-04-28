@@ -27,7 +27,7 @@ graph TD
 
             subgraph "Subred Privada - 172.20.20.0/24"
                 DB["🗄️ Base de Datos<br/>172.20.20.10"]
-                PHPMYADMIN["📋 phpMyAdmin<br/>IP dinámica (172.20.20.0/24)<br/>Acceso host: localhost:8081"]
+                PHPMYADMIN["📋 phpMyAdmin<br/>IP dinámica (172.20.20.0/24)<br/>Acceso host: http://localhost:8081"]
             end
 
             subgraph "Subred de Ataque - 172.20.30.0/24"
@@ -68,7 +68,7 @@ graph TD
 
 ## Segmentación de Redes
 
-1. **`red_publica` (172.20.10.0/24):** Aloja el `servidor_web` (EmpresaX). Es la red más visible durante `SYN Flood`, `UDP Flood` y `HTTP Flood`. Aquí se observa el impacto sobre la latencia HTTP, throughput, CPU del web y conexiones `SYN_RECV`.
+1. **`red_publica` (172.20.10.0/24):** Aloja el `servidor_web` (EmpresaX). Es la red más visible durante `SYN Flood`, `UDP Flood` y `HTTP Flood`. Aquí se observa el impacto sobre la latencia HTTP, throughput, CPU del servidor web y conexiones `SYN_RECV`.
 2. **`red_privada` (172.20.20.0/24):** Aloja la `base_datos`. Se ve afectada por el tráfico legítimo `web -> db` y por el `SQLi DoS`. Aquí se observa el impacto sobre conexiones MySQL y el ritmo de consultas.
 3. **`red_ataque` (172.20.30.0/24):** Aloja al `atacante` y al `panel_control`. Desde aquí se originan los ataques, permitiendo correlacionar el tráfico emitido y los eventos del panel.
 4. **`red_monitoreo` (172.20.40.0/24):** Aloja la capa de observabilidad. El `router` también está conectado a esta subred para dar coherencia topológica. *Importante:* El monitoreo funciona mediante exporters multi-interfaz con conectividad directa a las redes objetivo, por lo que el scraping de Prometheus no satura el plano de datos ruteado durante los ataques.
