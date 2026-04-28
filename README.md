@@ -126,46 +126,6 @@ Un resumen de la ejecución quedará registrado en `analisis/pcaps/capturas_45s_
 
 ---
 
-## Instrucciones de Uso Rápido
-
-### En Linux
-```bash
-# Levantar infraestructura
-bash scripts/scripts_captura_ataques/linux/up.sh
-
-# Validar estado de los contenedores
-bash scripts/scripts_captura_ataques/linux/validate.sh
-
-# Lanzar ataques de prueba
-bash scripts/scripts_captura_ataques/linux/attack.sh syn
-bash scripts/scripts_captura_ataques/linux/attack.sh udp
-bash scripts/scripts_captura_ataques/linux/attack.sh http
-bash scripts/scripts_captura_ataques/linux/attack.sh sqli_dos
-
-# Detener ataques
-bash scripts/scripts_captura_ataques/linux/stop_attacks.sh
-```
-
-### En Windows (PowerShell)
-```powershell
-# Levantar infraestructura
-scripts\scripts_captura_ataques\windows\up.ps1
-
-# Validar estado de los contenedores
-scripts\scripts_captura_ataques\windows\validate.ps1
-
-# Lanzar ataques de prueba
-scripts\scripts_captura_ataques\windows\attack.ps1 -Attack syn
-scripts\scripts_captura_ataques\windows\attack.ps1 -Attack udp
-scripts\scripts_captura_ataques\windows\attack.ps1 -Attack http
-scripts\scripts_captura_ataques\windows\attack.ps1 -Attack sqli_dos
-
-# Detener ataques
-scripts\scripts_captura_ataques\windows\stop_attacks.ps1
-```
-
----
-
 ## Documentación Principal
 
 Para profundizar en áreas específicas del proyecto, consulta los siguientes documentos:
