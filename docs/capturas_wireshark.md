@@ -88,15 +88,6 @@ Secuencia completa de los cuatro ataques:
 scripts\scripts_captura_ataques\windows\capture_all_attacks.ps1 -DurationSeconds 45
 ```
 
-Wrappers:
-
-```cmd
-scripts\scripts_captura_ataques\windows\start_capture.cmd red_publica syn
-scripts\scripts_captura_ataques\windows\stop_capture.cmd
-scripts\scripts_captura_ataques\windows\capture_attack.bat -Attack syn -DurationSeconds 45
-scripts\scripts_captura_ataques\windows\capture_all_attacks.bat -DurationSeconds 45
-```
-
 ## Recomendaciones por ataque
 
 - `SYN Flood`: capturar `red_publica`

@@ -13,12 +13,6 @@
 scripts\scripts_captura_ataques\windows\up.ps1
 ```
 
-Tambien se puede usar:
-
-```cmd
-scripts\scripts_captura_ataques\windows\up.cmd
-```
-
 ## Validar el entorno
 
 ```powershell
@@ -28,25 +22,30 @@ scripts\scripts_captura_ataques\windows\validate.ps1
 ## Generar trafico legitimo
 
 ```powershell
-scripts\scripts_captura_ataques\windows\generate_legitimate_traffic.ps1 -DurationSeconds 60 -IntervalMilliseconds 1000
+scripts\scripts_captura_ataques\windows\generate_legitimate_traffic.ps1
 ```
+
+El generador ahora funciona como sonda continua:
+
+- envia peticiones indefinidas hasta `Ctrl + C`
+- sobrescribe el CSV al iniciar una nueva corrida
+- muestra codigo HTTP y latencia en vivo
 
 Salida por defecto:
 
-- `analisis\trafico_legitimo_windows.csv`
+- `analisis\trafico_base.csv`
+
+Opciones utiles:
+
+- `scripts\scripts_captura_ataques\windows\generate_legitimate_traffic.ps1 -IntervalMilliseconds 500`
+- `scripts\scripts_captura_ataques\windows\generate_legitimate_traffic.ps1 -OutputFile analisis\trafico_base_custom.csv`
+- `scripts\scripts_captura_ataques\windows\generate_legitimate_traffic.ps1 -IntervalMilliseconds 500 -TargetUrl http://localhost:8080`
 
 ## Capturas Wireshark
 
 ```powershell
 scripts\scripts_captura_ataques\windows\start_capture.ps1 -Mode red_publica -Label syn
 scripts\scripts_captura_ataques\windows\stop_capture.ps1
-```
-
-Tambien existen wrappers:
-
-```cmd
-scripts\scripts_captura_ataques\windows\start_capture.cmd red_publica syn
-scripts\scripts_captura_ataques\windows\stop_capture.cmd
 ```
 
 La salida queda en:
@@ -82,13 +81,6 @@ Corrida completa:
 scripts\scripts_captura_ataques\windows\capture_all_attacks.ps1 -DurationSeconds 45
 ```
 
-Wrappers batch:
-
-```cmd
-scripts\scripts_captura_ataques\windows\capture_attack.bat -Attack syn -DurationSeconds 45
-scripts\scripts_captura_ataques\windows\capture_all_attacks.bat -DurationSeconds 45
-```
-
 Resumen:
 
 - `analisis\pcaps\capturas_45s_resumen.txt`
@@ -108,12 +100,6 @@ Ataques finales permitidos:
 - `syn`
 - `http`
 - `sqli_dos`
-
-Tambien existe el wrapper:
-
-```cmd
-scripts\scripts_captura_ataques\windows\attack.cmd syn
-```
 
 ## Detener ataques
 

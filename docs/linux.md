@@ -32,12 +32,24 @@ La validacion comprueba:
 ## Generar trafico legitimo
 
 ```bash
-bash scripts/scripts_captura_ataques/linux/generate_legitimate_traffic.sh 60 1
+bash scripts/scripts_captura_ataques/linux/generate_legitimate_traffic.sh
 ```
+
+El generador ahora funciona como sonda continua:
+
+- envia peticiones indefinidas hasta `Ctrl + C`
+- sobrescribe el CSV al iniciar una nueva corrida
+- muestra codigo HTTP y latencia en vivo
 
 Salida por defecto:
 
-- `analisis/trafico_legitimo.csv`
+- `analisis/trafico_base.csv`
+
+Opciones utiles:
+
+- `bash scripts/scripts_captura_ataques/linux/generate_legitimate_traffic.sh 0.5`
+- `bash scripts/scripts_captura_ataques/linux/generate_legitimate_traffic.sh 1 analisis/trafico_base_custom.csv`
+- `bash scripts/scripts_captura_ataques/linux/generate_legitimate_traffic.sh 0.5 analisis/trafico_base.csv http://localhost:8080`
 
 ## Capturas Wireshark
 

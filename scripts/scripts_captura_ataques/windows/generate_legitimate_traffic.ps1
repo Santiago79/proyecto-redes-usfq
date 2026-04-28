@@ -1,13 +1,17 @@
 param(
-    [int]$DurationSeconds = 60,
-    [int]$IntervalMilliseconds = 1000,
-    [string]$OutputFile = ""
+    [int]$IntervalMilliseconds = 500,
+    [string]$OutputFile = "",
+    [string]$TargetUrl = ""
 )
 
 . "$PSScriptRoot\\Common.ps1"
 
 if (-not $OutputFile) {
-    $OutputFile = Join-Path $Script:RootDir "analisis\\trafico_legitimo_windows.csv"
+    $OutputFile = Join-Path $Script:RootDir "analisis\\trafico_base.csv"
+}
+
+if (-not $TargetUrl) {
+    $TargetUrl = $Script:WebUrl
 }
 
 $outputDir = Split-Path -Parent $OutputFile
@@ -16,14 +20,25 @@ if (-not (Test-Path $outputDir)) {
 }
 
 "timestamp,http_code,latency_seconds" | Set-Content -Path $OutputFile
-$endAt = (Get-Date).AddSeconds($DurationSeconds)
 
-while ((Get-Date) -lt $endAt) {
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $response = (& curl.exe -s -o NUL -w "%{http_code},%{time_total}" $Script:WebUrl).Trim()
-    "$timestamp,$response" | Tee-Object -FilePath $OutputFile -Append
-    Start-Sleep -Milliseconds $IntervalMilliseconds
+Write-Host "======================================================"
+Write-Host " Iniciando sonda de trafico HTTP hacia $TargetUrl"
+Write-Host " Guardando muestras en: $OutputFile"
+Write-Host " Presiona Ctrl + C para detener la ejecucion."
+Write-Host "======================================================"
+
+try {
+    while ($true) {
+        $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        $response = (& curl.exe -s -o NUL -w "%{http_code},%{time_total}" $TargetUrl).Trim()
+        $parts = $response -split ",", 2
+        $httpCode = $parts[0]
+        $latency = if ($parts.Length -gt 1) { $parts[1] } else { "" }
+        Write-Host "[$timestamp] Codigo HTTP: $httpCode | Latencia: $($latency)s"
+        "$timestamp,$httpCode,$latency" | Add-Content -Path $OutputFile
+        Start-Sleep -Milliseconds $IntervalMilliseconds
+    }
+} finally {
+    Write-Host ""
+    Write-Host "Trafico legitimo detenido. CSV disponible en: $OutputFile"
 }
-
-Write-Host ""
-Write-Host "Trafico legitimo registrado en: $OutputFile"
