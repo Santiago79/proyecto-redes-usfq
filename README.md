@@ -25,7 +25,7 @@ graph TD
 
             subgraph "Subred Privada - 172.20.20.0/24"
                 DB["🗄️ Base de Datos<br/>172.20.20.10"]
-                PHPMYADMIN["📋 phpMyAdmin<br/>IP dinámica (172.20.20.0/24)"]
+                PHPMYADMIN["📋 phpMyAdmin<br/>IP dinámica (172.20.20.0/24)<br/>Host: 8081"]
             end
 
             subgraph "Subred de Ataque - 172.20.30.0/24"
