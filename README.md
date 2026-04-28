@@ -77,8 +77,6 @@ graph TD
 
 ## Inventario de Ataques
 
-Para hacer la presentación más clara y focalizada, el proyecto final se simplificó conservando exclusivamente los 4 ataques más representativos de distintas capas del modelo OSI (se eliminaron intencionalmente `ACK Flood` y `Conntrack Killer`).
-
 | Ataque | Objetivo Principal | Red más Afectada | Evidencia Principal en Dashboards |
 |---|---|---|---|
 | **`SYN Flood`** | Pila TCP del servidor web | `red_publica` | Paquetes/s + `NET I/O` + `SYN_RECV` |
