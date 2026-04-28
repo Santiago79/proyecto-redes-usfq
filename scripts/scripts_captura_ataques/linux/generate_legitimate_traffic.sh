@@ -7,20 +7,32 @@ source "$SCRIPT_DIR/common.sh"
 
 require_command curl
 
-DURATION_SECONDS="${1:-60}"
-INTERVAL_SECONDS="${2:-1}"
-OUTPUT_FILE="${3:-$ROOT_DIR/analisis/trafico_legitimo.csv}"
+INTERVAL_SECONDS="${1:-0.5}"
+OUTPUT_FILE="${2:-$ROOT_DIR/analisis/trafico_base.csv}"
+TARGET_URL="${3:-$WEB_URL}"
 
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 echo "timestamp,http_code,latency_seconds" >"$OUTPUT_FILE"
 
-end_at=$((SECONDS + DURATION_SECONDS))
-while (( SECONDS < end_at )); do
+echo "======================================================"
+echo " Iniciando sonda de trafico HTTP hacia $TARGET_URL"
+echo " Guardando muestras en: $OUTPUT_FILE"
+echo " Presiona [Ctrl+C] para detener la ejecucion."
+echo "======================================================"
+
+cleanup() {
+  echo
+  echo "Trafico legitimo detenido. CSV disponible en: $OUTPUT_FILE"
+}
+
+trap cleanup EXIT INT TERM
+
+while true; do
   timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
-  response="$(curl -s -o /dev/null -w '%{http_code},%{time_total}' "$WEB_URL")"
-  echo "$timestamp,$response" | tee -a "$OUTPUT_FILE"
+  response="$(curl -s -o /dev/null -w '%{http_code},%{time_total}' "$TARGET_URL")"
+  http_code="${response%%,*}"
+  latency="${response#*,}"
+  echo "[$timestamp] Codigo HTTP: $http_code | Latencia: ${latency}s"
+  echo "$timestamp,$http_code,$latency" >>"$OUTPUT_FILE"
   sleep "$INTERVAL_SECONDS"
 done
-
-echo
-echo "Trafico legitimo registrado en: $OUTPUT_FILE"
