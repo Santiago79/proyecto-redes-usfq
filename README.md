@@ -1,6 +1,8 @@
 # Simulación de Red Empresarial con Docker
 
-Proyecto final de redes orientado a demostrar, medir y explicar el impacto de ataques controlados sobre una infraestructura empresarial segmentada. El proyecto implementa una simulación realista con una DMZ pública, una red privada, una red de ataque, un router virtual y un monitor multi-interfaz. Sobre esta base, se despliega una capa completa de observabilidad (Prometheus, Grafana, Loki y exporters) para visualizar en tiempo real el impacto de la denegación de servicio y las cargas maliciosas.
+Proyecto final de redes orientado a demostrar, medir y explicar el impacto de ataques controlados sobre una infraestructura empresarial segmentada.
+
+El proyecto implementa una simulación realista con una DMZ pública, una red privada, una red de ataque, un router virtual y un monitor multi-interfaz. Sobre esta base, se despliega una capa completa de observabilidad (Prometheus, Grafana, Loki y exporters) para visualizar en tiempo real el impacto de la denegación de servicio y las cargas maliciosas.
 
 ## Integrantes
 
@@ -25,7 +27,7 @@ graph TD
 
             subgraph "Subred Privada - 172.20.20.0/24"
                 DB["🗄️ Base de Datos<br/>172.20.20.10"]
-                PHPMYADMIN["📋 phpMyAdmin<br/>IP dinámica (172.20.20.0/24)<br/>Host: 8081"]
+                PHPMYADMIN["📋 phpMyAdmin<br/>IP dinámica (172.20.20.0/24)<br/>Acceso host: localhost:8081"]
             end
 
             subgraph "Subred de Ataque - 172.20.30.0/24"
