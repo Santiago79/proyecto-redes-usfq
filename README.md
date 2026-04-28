@@ -27,7 +27,7 @@ graph TD
 
             subgraph "Subred Privada - 172.20.20.0/24"
                 DB["🗄️ Base de Datos<br/>172.20.20.10"]
-                PHPMYADMIN["📋 phpMyAdmin<br/>IP dinámica (172.20.20.0/24)<br/>Acceso host: http://localhost:8081"]
+                PHPMYADMIN["📋 phpMyAdmin<br/>IP dinámica (172.20.20.0/24)<br/>Acceso host (fuera de Docker): http://localhost:8081"]
             end
 
             subgraph "Subred de Ataque - 172.20.30.0/24"
@@ -77,7 +77,7 @@ graph TD
 
 ## Inventario de Ataques
 
-Para hacer la presentación más clara y focalizada, el proyecto final se simplificó conservando exclusivamente los 4 ataques más representativos de distintas capas del modelo OSI (se eliminaron intencionalmente *ACK Flood* y *Conntrack Killer*).
+Para hacer la presentación más clara y focalizada, el proyecto final se simplificó conservando exclusivamente los 4 ataques más representativos de distintas capas del modelo OSI (se eliminaron intencionalmente `ACK Flood` y `Conntrack Killer`).
 
 | Ataque | Objetivo Principal | Red más Afectada | Evidencia Principal en Dashboards |
 |---|---|---|---|
